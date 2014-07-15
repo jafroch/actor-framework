@@ -164,6 +164,16 @@ endif()
 if(CAF_NO_MEM_MANAGEMENT)
   add_definitions(-DCAF_NO_MEM_MANAGEMENT)
 endif()
+if (APPLE)
+  # -pthread is ignored on MacOSX
+elseif (UNIX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+elseif (MINGW)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  set(LD_FLAGS "ws2_32 -liphlpapi")
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+  set(LD_FLAGS "${LD_FLAGS} -lexecinfo")
+endif ()
 
 
 ################################################################################
@@ -426,3 +436,4 @@ message(STATUS
         "\nGenerator:         ${CMAKE_GENERATOR}"
         "\n"
         "\n===========================================================\n")
+
