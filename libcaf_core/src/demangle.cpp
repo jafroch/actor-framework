@@ -75,7 +75,7 @@ std::string filter_whitespaces(const char* cstr, size_t size = 0) {
   std::string demangle(const char* decorated) {
     using std::string;
     size_t size;
-    int status;
+    int status = 0;
     using uptr = std::unique_ptr<char, void (*)(void*)>;
     uptr undecorated{abi::__cxa_demangle(decorated, nullptr, &size, &status),
                      std::free};
