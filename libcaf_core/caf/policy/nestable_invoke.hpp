@@ -20,12 +20,12 @@
 #ifndef CAF_THREADED_HPP
 #define CAF_THREADED_HPP
 
-#include <mutex>
 #include <chrono>
-#include <condition_variable>
 
+#include "caf/mutex.hpp"
 #include "caf/exit_reason.hpp"
 #include "caf/mailbox_element.hpp"
+#include "caf/condition_variable.hpp"
 
 #include "caf/detail/sync_request_bouncer.hpp"
 #include "caf/detail/single_reader_queue.hpp"

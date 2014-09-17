@@ -20,14 +20,13 @@
 #ifndef CAF_IO_NETWORK_DEFAULT_MULTIPLEXER_HPP
 #define CAF_IO_NETWORK_DEFAULT_MULTIPLEXER_HPP
 
-#include <thread>
-
 #include <vector>
 #include <string>
 #include <cstdint>
 
 #include "caf/config.hpp"
 #include "caf/extend.hpp"
+#include "caf/thread.hpp"
 #include "caf/exception.hpp"
 #include "caf/ref_counted.hpp"
 
@@ -404,7 +403,7 @@ class default_multiplexer : public multiplexer {
   multiplexer_poll_shadow_data m_shadow;
   std::pair<native_socket, native_socket> m_pipe;
 
-  std::thread::id m_tid;
+  thread::id m_tid;
 
 };
 

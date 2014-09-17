@@ -21,9 +21,9 @@
 #define CAF_DETAIL_GROUP_MANAGER_HPP
 
 #include <map>
-#include <mutex>
-#include <thread>
 
+#include "caf/mutex.hpp"
+#include "caf/thread.hpp"
 #include "caf/abstract_group.hpp"
 #include "caf/detail/shared_spinlock.hpp"
 
@@ -54,7 +54,7 @@ class group_manager : public singleton_mixin<group_manager> {
   using modules_map = std::map<std::string, abstract_group::unique_module_ptr>;
 
   modules_map m_mmap;
-  std::mutex m_mmap_mtx;
+  mutex m_mmap_mtx;
 
   group_manager();
 

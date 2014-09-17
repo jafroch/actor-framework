@@ -189,7 +189,7 @@ void middleman::initialize() {
   CAF_LOG_TRACE("");
   m_backend = network::multiplexer::make();
   m_supervisor = m_backend->make_supervisor();
-  m_thread = std::thread([this] {
+  m_thread = thread([this] {
     CAF_LOGC_TRACE("caf::io::middleman", "initialize$run", "");
     m_backend->run();
   });
