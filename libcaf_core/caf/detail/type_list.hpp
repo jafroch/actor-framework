@@ -323,14 +323,14 @@ struct tl_reverse {
 template <class List, template <class> class Pred, int Pos = 0>
 struct tl_find_impl;
 
-template <template <class...> class TL, template <class> class Pred, int Pos>
-struct tl_find_impl<TL<>, Pred, Pos> {
+template <template <class> class Pred, int Pos>
+struct tl_find_impl<type_list<>, Pred, Pos> {
   static constexpr int value = -1;
 };
 
-template <template <class...> class List, template <class> class Pred,
+template <template <class> class Pred,
           int Pos, class T0, class... Ts>
-struct tl_find_impl<List<T0, Ts...>, Pred, Pos> {
+struct tl_find_impl<type_list<T0, Ts...>, Pred, Pos> {
   // always use type_list for recursive calls to minimize instantiation costs
   static constexpr int value =
       Pred<T0>::value ? Pos
