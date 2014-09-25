@@ -84,12 +84,12 @@ struct il_indices<List<T0, Ts...>, Pos, int_list<Is...>> {
 };
 
 template <class T>
-constexpr auto get_indices(const T&) -> typename il_indices<T>::type {
+auto get_indices(const T&) -> typename il_indices<T>::type {
   return {};
 }
 
 template <size_t Num, typename T>
-constexpr auto get_right_indices(const T&)
+auto get_right_indices(const T&)
 -> typename il_right<typename il_indices<T>::type, Num>::type {
   return {};
 }
