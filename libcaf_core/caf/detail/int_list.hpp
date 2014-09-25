@@ -20,8 +20,6 @@
 #ifndef CAF_DETAIL_INT_LIST_HPP
 #define CAF_DETAIL_INT_LIST_HPP
 
-#include <tuple>
-
 #include "caf/detail/type_list.hpp"
 
 namespace caf {
@@ -81,8 +79,9 @@ struct il_indices<type_list<T0, Ts...>, Pos, int_list<Is...>> {
     >::type;
 };
 
-template <class... Ts>
-auto get_indices(const std::tuple<Ts...>&) -> typename il_indices<type_list<Ts...>>::type {
+template <class T>
+auto get_indices(const T&)
+-> typename il_indices<typename tl_convert<T>::type>::type {
   return {};
 }
 

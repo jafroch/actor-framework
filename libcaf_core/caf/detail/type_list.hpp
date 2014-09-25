@@ -20,9 +20,9 @@
 #ifndef CAF_DETAIL_TYPE_LIST_HPP
 #define CAF_DETAIL_TYPE_LIST_HPP
 
+#include <cstddef>
 #include <typeinfo>
 #include <type_traits>
-#include <cstddef>
 
 #include "caf/unit.hpp"
 
@@ -37,6 +37,18 @@ namespace detail {
  */
 template <class... Ts>
 struct type_list { };
+
+/**
+ * Converts any variadic template `T<Ts...>` to
+ * `type_list<Ts...>`.
+ */
+template <class T>
+struct tl_convert;
+
+template <template <class...> class T, class... Ts>
+struct tl_convert<T<Ts...>> {
+  using type = type_list<Ts...>;
+};
 
 /**
  * Denotes the empty list.
@@ -343,7 +355,11 @@ struct tl_find_impl<type_list<T0, Ts...>, Pred, Pos> {
  */
 template <class List, template <class> class Pred, int Pos = 0>
 struct tl_find_if {
-  static constexpr int value = tl_find_impl<List, Pred, Pos>::value;
+  static constexpr int value = tl_find_impl<
+                                 typename tl_convert<List>::type,
+                                 Pred,
+                                 Pos
+                               >::value;
 };
 
 /**
@@ -353,7 +369,7 @@ struct tl_find_if {
 template <class List, class What, int Pos = 0>
 struct tl_find {
   static constexpr int value = tl_find_impl<
-                                 List,
+                                 typename tl_convert<List>::type,
                                  tbind<std::is_same, What>::template type,
                                  Pos
                                >::value;
