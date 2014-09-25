@@ -247,7 +247,8 @@ class blocking_actor::functor_based : public blocking_actor {
     using trait = typename detail::get_callable_trait<F>::type;
     using first = typename detail::tl_head<typename trait::arg_types>::type;
     blocking_actor* dummy = nullptr;
-    std::integral_constant<bool, std::is_same<first, blocking_actor*>> token;
+    constexpr bool uses_selfptr = std::is_same<first, blocking_actor*>::value;
+    std::integral_constant<bool, uses_selfptr> token;
     create(dummy, token, f, std::forward<Ts>(vs)...);
   }
 
@@ -264,7 +265,7 @@ class blocking_actor::functor_based : public blocking_actor {
 
   template <class Actor, typename F, class... Ts>
   void create(Actor* dummy, std::false_type, F f, Ts&&... vs) {
-    std::function<void()> fun = std::bind(f, std::forward<T0>(v0), std::forward<Ts>(vs)...);
+    std::function<void()> fun = std::bind(f, std::forward<Ts>(vs)...);
     create(dummy, [fun](Actor*) { fun(); });
   }
 
