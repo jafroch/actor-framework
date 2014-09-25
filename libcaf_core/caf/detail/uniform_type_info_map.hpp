@@ -58,7 +58,7 @@ mapped_name_by_decorated_name(const std::string& decorated_name) {
 extern const char* mapped_int_names[][2];
 
 template <class T>
-constexpr const char* mapped_int_name() {
+const char* mapped_int_name() {
   return mapped_int_names[sizeof(T)][std::is_signed<T>::value ? 1 : 0];
 }
 
