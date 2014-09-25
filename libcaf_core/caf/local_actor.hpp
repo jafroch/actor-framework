@@ -494,7 +494,7 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
                                   message&& what);
 
   // returns the response ID
-  template <class... Rs, class... Ts>
+  template <class... Rs>
   message_id sync_send_tuple_impl(message_priority mp,
                                   const typed_actor<Rs...>& whom,
                                   message&& msg) {
