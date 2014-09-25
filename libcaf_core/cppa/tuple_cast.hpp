@@ -85,12 +85,10 @@ auto moving_tuple_cast(message& tup)
       typename detail::tl_filter_not<detail::type_list<T...>, is_anything>::type
     >::type;
   using types = detail::type_list<T...>;
-  static constexpr auto impl =
-      get_wildcard_position<detail::type_list<T...>>();
   auto& tarr = detail::static_types_array<T...>::arr;
   const uniform_type_info* const* arr_pos = tarr.begin();
   message sub;
-  switch (impl) {
+  switch (get_wildcard_position<detail::type_list<T...>>::value) {
     case wildcard_position::nil: {
       sub = tup;
       break;
