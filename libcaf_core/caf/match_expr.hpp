@@ -304,7 +304,8 @@ struct invoke_util_impl<wildcard_position::leading, Pattern,
 };
 
 template <class Pattern>
-struct invoke_util : invoke_util_impl<get_wildcard_position<Pattern>(), Pattern,
+struct invoke_util : invoke_util_impl<get_wildcard_position<Pattern>::value,
+                                      Pattern,
                                       typename detail::tl_filter_not_type<
                                         Pattern,
                                         anything>::type
@@ -613,7 +614,7 @@ class match_expr {
 
   using idx_token_type = detail::long_constant<sizeof...(Cs) - 1l>;
 
-  static constexpr idx_token_type idx_token = idx_token_type{};
+  //static constexpr idx_token_type idx_token = idx_token_type{};
 
   template <class T, class... Ts>
   match_expr(T arg, Ts&&... args)
@@ -694,7 +695,10 @@ class match_expr {
     if (i == m_cache_end) {
       // ... 'create' one (override oldest element in cache if full)
       advance_(m_cache_end);
-      if (m_cache_end == m_cache_begin) advance_(m_cache_begin);
+      if (m_cache_end == m_cache_begin) {
+        advance_(m_cache_begin);
+      }
+      idx_token_type idx_token;
       m_cache[i].first = type_token;
       m_cache[i].second =
         calc_bitmask(m_cases, idx_token, *type_token, value);
@@ -713,6 +717,7 @@ class match_expr {
 
   template <class Tuple>
   result_type apply(Tuple& tup) {
+    idx_token_type idx_token;
     if (tup.empty()) {
       detail::tuple_dummy td;
       auto td_token_ptr = td.type_token();

@@ -241,9 +241,10 @@ template <class Tuple, class List>
 struct select_matcher;
 
 template <class Tuple, class... Ts>
-struct select_matcher<Tuple, detail::type_list<Ts...>> {
-  using type = matcher<get_wildcard_position<detail::type_list<Ts...>>(),
-                       Tuple, Ts...>;
+struct select_matcher<Tuple, type_list<Ts...>> {
+  using list_type = type_list<Ts...>;
+  static constexpr auto matcher_id = get_wildcard_position<list_type>::value;
+  using type = matcher<matcher_id, Tuple, Ts...>;
 };
 
 } // namespace detail
