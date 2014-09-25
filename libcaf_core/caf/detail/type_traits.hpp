@@ -430,11 +430,21 @@ struct replace_type_impl<true, T1, T2> {
 };
 
 /**
+ * Works around a weird compiler bug in Visual Studio.
+ * VS claims `IfStmt::value...` is an unpacked parameter pack,
+ * however, `value_of<IfStmt>()...` works just fine.
+ */
+template <class T>
+constexpr bool value_of() {
+  return T::value;
+}
+
+/**
  * Replaces `What` with `With` if any IfStmt::value evaluates to true.
  */
 template <class What, typename With, class... IfStmt>
 struct replace_type {
-  static constexpr bool do_replace = disjunction<IfStmt::value...>::value;
+  static constexpr bool do_replace = disjunction<value_of<IfStmt>()...>::value;
   using type = typename replace_type_impl<do_replace, What, With>::type;
 };
 

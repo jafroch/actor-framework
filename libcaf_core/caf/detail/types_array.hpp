@@ -20,6 +20,7 @@
 #ifndef CAF_DETAIL_TYPES_ARRAY_HPP
 #define CAF_DETAIL_TYPES_ARRAY_HPP
 
+#include <array>
 #include <atomic>
 #include <typeinfo>
 
@@ -103,16 +104,19 @@ struct types_array_impl<false, T...> {
   static constexpr bool builtin_only = false;
   inline bool is_pure() const { return false; }
   // contains std::type_info for all non-builtin types
-  const std::type_info* tinfo_data[sizeof...(T)];
+  using array_type = std::array<const std::type_info*, sizeof...(T)>;
+  array_type tinfo_data;
   // contains uniform_type_infos for builtin types and lazy initializes
   // non-builtin types at runtime
   mutable std::atomic<const uniform_type_info*> data[sizeof...(T)];
   mutable std::atomic<const uniform_type_info**> pairs;
   // pairs[sizeof...(T)];
-  types_array_impl()
-      : tinfo_data{ta_util<std_tinf, is_builtin<T>::value, T>::get()...} {
+  types_array_impl() {
+    // initializing tinfo_data directly won't work in VS14
+    array_type tmp{ ta_util<std_tinf, is_builtin<T>::value, T>::get()... };
+    tinfo_data.swap(tmp);
     bool static_init[sizeof...(T)] = {!std::is_same<T, anything>::value &&
-                      is_builtin<T>::value...};
+                      value_of<is_builtin<T>>()...};
     for (size_t i = 0; i < sizeof...(T); ++i) {
       if (static_init[i]) {
         data[i].store(uniform_typeid(*(tinfo_data[i])),
