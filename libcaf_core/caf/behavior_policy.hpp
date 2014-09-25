@@ -25,7 +25,9 @@ namespace caf {
 template <bool DiscardBehavior>
 struct behavior_policy {
   static constexpr bool discard_old = DiscardBehavior;
-
+  constexpr behavior_policy() {
+    // nop
+  }
 };
 
 template <class T>
