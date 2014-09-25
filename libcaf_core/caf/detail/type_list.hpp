@@ -110,18 +110,18 @@ struct tl_size<List<Ts...>> {
 template <class List>
 struct tl_back;
 
-template <template <class...> class List>
-struct tl_back<List<>> {
+template <>
+struct tl_back<type_list<>> {
   using type = unit_t;
 };
 
-template <template <class...> class List, typename T0>
-struct tl_back<List<T0>> {
+template <typename T0>
+struct tl_back<type_list<T0>> {
   using type = T0;
 };
 
-template <template <class...> class List, typename T0, typename T1, class... Ts>
-struct tl_back<List<T0, T1, Ts...>> {
+template <typename T0, typename T1, class... Ts>
+struct tl_back<type_list<T0, T1, Ts...>> {
   // remaining arguments are forwarded as type_list to prevent
   // recursive instantiation of List class
   using type = typename tl_back<type_list<T1, Ts...>>::type;
