@@ -292,13 +292,11 @@ __unspecified__ lift_to_match_expr(T arg);
 #else
 
 template <class T>
-constexpr typename detail::boxed<T>::type val() {
+typename detail::boxed<T>::type val() {
   return typename detail::boxed<T>::type();
 }
 
-using boxed_arg_match_t = typename detail::boxed<detail::arg_match_t>::type;
-
-constexpr boxed_arg_match_t arg_match = boxed_arg_match_t();
+constexpr detail::arg_match_t arg_match = detail::arg_match_t{};
 
 template <class T, typename Predicate>
 std::function<optional<T>(const T&)> guarded(Predicate p, T value) {
