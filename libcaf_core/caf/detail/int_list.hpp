@@ -63,8 +63,8 @@ struct il_right<int_list<Is...>, N> : il_right_impl<(N > sizeof...(Is)
 template <class List, long Pos = 0, typename Indices = int_list<>>
 struct il_indices;
 
-template <template <class...> class List, long... Is, long Pos>
-struct il_indices<List<>, Pos, int_list<Is...>> {
+template <long... Is, long Pos>
+struct il_indices<type_list<>, Pos, int_list<Is...>> {
   using type = int_list<Is...>;
 };
 
