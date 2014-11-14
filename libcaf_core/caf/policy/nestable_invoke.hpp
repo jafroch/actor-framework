@@ -20,9 +20,8 @@
 #ifndef CAF_THREADED_HPP
 #define CAF_THREADED_HPP
 
-#include <chrono>
-
 #include "caf/mutex.hpp"
+#include "caf/chrono.hpp"
 #include "caf/exit_reason.hpp"
 #include "caf/mailbox_element.hpp"
 #include "caf/condition_variable.hpp"
