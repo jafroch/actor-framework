@@ -79,7 +79,7 @@ endif()
 ################################################################################
 
 # check for g++ >= 4.7 or clang++ > = 3.2
-if(NOT WIN32 AND NOT NO_COMPILER_CHECK)
+if(NOT WIN32 AND NOT NO_COMPILER_CHECK AND NOT CAF_OMIT_COMPILER_CHECK)
   try_run(ProgramResult
           CompilationSucceeded
           "${CMAKE_BINARY_DIR}"
@@ -145,7 +145,7 @@ if(ENABLE_ADDRESS_SANITIZER)
   message(STATUS "Enable address sanitizer")
 endif(ENABLE_ADDRESS_SANITIZER)
 # -pthread is ignored on MacOSX, enable it for all other platforms
-if(NOT APPLE AND NOT WIN32)
+if(NOT APPLE AND NOT WIN32 AND NOT CMAKE_CROSSCOMPILING)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
 # extra setup steps needed on MinGW
@@ -177,8 +177,16 @@ endif()
 
 if(CAF_FOR_RIOT)
   add_definitions(-D__RIOTBUILD_FLAG)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-  set(LD_FLAGS "${LD_FLAGS} -m32")
+  if (NOT CMAKE_CROSSCOMPILING)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+    set(LD_FLAGS "${LD_FLAGS} -m32")
+  endif()
+  if (CROSS_CXX_FLAGS)
+    message(STATUS "Setting CMAKE_CXX_FLAGS to ${CROSS_CXX_FLAGS}")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CROSS_C_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CROSS_CXX_FLAGS}")
+  endif()
+  message(STATUS "using compiler ${CMAKE_C_COMPILER} and ${CMAKE_CXX_COMPILER}")
 endif()
 
 ################################################################################
