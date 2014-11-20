@@ -113,7 +113,7 @@
 // import backtrace and backtrace_symbols_fd into caf::detail
 #ifdef CAF_WINDOWS
 #include "caf/detail/execinfo_windows.hpp"
-#else
+#elif !(__RIOTBUILD_FLAG)
 #include <execinfo.h>
 namespace caf {
 namespace detail {
