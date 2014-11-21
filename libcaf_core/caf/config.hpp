@@ -113,7 +113,7 @@
 // import backtrace and backtrace_symbols_fd into caf::detail
 #ifdef CAF_WINDOWS
 #include "caf/detail/execinfo_windows.hpp"
-#elif !(__RIOTBUILD_FLAG)
+#elif !(__RIOTBUILD_FLAG) // does not work on arm cross compiliers
 #include <execinfo.h>
 namespace caf {
 namespace detail {
@@ -145,5 +145,19 @@ using ::backtrace_symbols_fd;
   } static_cast<void>(0)
 
 #define CAF_CRITICAL(error) CAF_CRITICAL__(error, __FILE__, __LINE__)
+
+// arm cross compilers don't offer to_string
+#ifdef __RIOTBUILD_FLAG
+#include <string>
+#include <sstream>
+namespace std {
+template <class T>
+std::string to_string(T value) {
+  std::stringstream ss;
+  ss << value;
+  return ss.str();
+}
+} // namespace caf
+#endif
 
 #endif // CAF_CONFIG_HPP
