@@ -17,11 +17,12 @@
  * http://www.boost.org/LICENSE_1_0.txt.                                      *
  ******************************************************************************/
 
-#ifndef CAF_RECURSIVE_QUEUE_NODE_HPP
-#define CAF_RECURSIVE_QUEUE_NODE_HPP
+#ifndef CAF_MAILBOX_ELEMENT_HPP
+#define CAF_MAILBOX_ELEMENT_HPP
 
 #include <cstdint>
 
+#include "caf/fwd.hpp" // mailbox_element_uptr
 #include "caf/extend.hpp"
 #include "caf/message.hpp"
 #include "caf/actor_addr.hpp"
@@ -30,49 +31,72 @@
 
 #include "caf/mixin/memory_cached.hpp"
 
+#include "caf/detail/tuple_vals.hpp"
+#include "caf/detail/message_data.hpp"
+#include "caf/detail/implicit_conversions.hpp"
+#include "caf/detail/mailbox_element_disposer.hpp"
+
 // needs access to constructor + destructor to initialize m_dummy_node
 namespace caf {
 
-class local_actor;
-
-class mailbox_element : public extend<memory_managed>::
-                 with<mixin::memory_cached> {
-
-  friend class local_actor;
-  friend class detail::memory;
-
+class mailbox_element {
  public:
+  friend class detail::mailbox_element_disposer;
 
   mailbox_element* next; // intrusive next pointer
-  bool marked;       // denotes if this node is currently processed
+  bool marked;           // denotes if this node is currently processed
   actor_addr sender;
   message_id mid;
-  message msg; // 'content field'
 
-  ~mailbox_element();
+  mailbox_element();
+
+  virtual message& msg() = 0;
 
   mailbox_element(mailbox_element&&) = delete;
   mailbox_element(const mailbox_element&) = delete;
   mailbox_element& operator=(mailbox_element&&) = delete;
   mailbox_element& operator=(const mailbox_element&) = delete;
 
-  template <class T>
-  static mailbox_element* create(actor_addr sender, message_id id, T&& data) {
-    return detail::memory::create<mailbox_element>(std::move(sender), id,
-                             std::forward<T>(data));
+  template <class T, class... Ts>
+  static typename std::enable_if<
+    !std::is_same<typename detail::strip_and_convert<T>::type, message>::value,
+    mailbox_element_uptr
+  >::type
+  create(actor_addr sender, message_id id, T&& v, Ts&&... vs) {
+    using base = detail::tuple_vals<typename detail::strip_and_convert<T>::type,
+                                    typename detail::strip_and_convert<Ts>::type...>;
+    class impl : public mailbox_element, public base {
+     public:
+      message m_self;
+      impl(actor_addr& sender, message_id id, T&& v, Ts&&... vs)
+          : mailbox_element(std::move(sender), id),
+            base(std::forward<T>(v), std::forward<Ts>(vs)...) {
+        // holds an intrusive pointer to itself,
+        // which is released in dispose_mailbox_element()
+        message tmp{this};
+        m_self.swap(tmp);
+      }
+      void dispose_mailbox_element() override {
+        // deletes instance if no other reference exists
+        m_self.reset();
+      }
+      message& msg() override {
+        return m_self;
+      }
+    };
+    return mailbox_element_uptr{new impl(sender, id, std::forward<T>(v),
+                                         std::forward<Ts>(vs)...)};
   }
 
- private:
+  static mailbox_element_uptr create(actor_addr sender, message_id id,
+                                     message content);
 
-  mailbox_element() = default;
-
-  mailbox_element(actor_addr sender, message_id id, message data);
-
+ protected:
+  mailbox_element(actor_addr sender, message_id id);
+  virtual ~mailbox_element();
+  virtual void dispose_mailbox_element() = 0;
 };
-
-using unique_mailbox_element_pointer =
-  std::unique_ptr<mailbox_element, detail::disposer>;
 
 } // namespace caf
 
-#endif // CAF_RECURSIVE_QUEUE_NODE_HPP
+#endif // CAF_MAILBOX_ELEMENT_HPP

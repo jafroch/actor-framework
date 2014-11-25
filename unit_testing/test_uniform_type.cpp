@@ -42,6 +42,10 @@ struct test_struct {
   test_enum test_value;
 };
 
+inline bool operator==(const test_struct& lhs, const test_struct& rhs) {
+  return lhs.test_value == rhs.test_value;
+}
+
 } // namespace <anonymous>
 
 using namespace caf;

@@ -52,16 +52,16 @@ class proper_actor_base : public Policies::resume_policy::template
   using timeout_type = typename Policies::scheduling_policy::timeout_type;
 
   void enqueue(const actor_addr& sender,
-         message_id mid,
-         message msg,
-         execution_unit* eu) override {
+               message_id mid,
+               message msg,
+               execution_unit* eu) override {
     CAF_PUSH_AID(dptr()->id());
-    /*
-    CAF_LOG_DEBUG(CAF_TARG(sender, to_string)
-             << ", " << CAF_MARG(mid, integer_value) << ", "
-             << CAF_TARG(msg, to_string));
-    */
     scheduling_policy().enqueue(dptr(), sender, mid, msg, eu);
+  }
+
+  void enqueue(mailbox_element_uptr ptr, execution_unit* eu) override {
+    CAF_PUSH_AID(dptr()->id());
+    scheduling_policy().enqueue(dptr(), std::move(ptr), eu);
   }
 
   inline void launch(bool hide, bool lazy, execution_unit* host) {
@@ -87,7 +87,7 @@ class proper_actor_base : public Policies::resume_policy::template
 
   // member functions from priority policy
 
-  inline unique_mailbox_element_pointer next_message() {
+  inline mailbox_element_uptr next_message() {
     return priority_policy().next_message(dptr());
   }
 
@@ -95,7 +95,7 @@ class proper_actor_base : public Policies::resume_policy::template
     return priority_policy().has_next_message(dptr());
   }
 
-  inline void push_to_cache(unique_mailbox_element_pointer ptr) {
+  inline void push_to_cache(mailbox_element_uptr ptr) {
     priority_policy().push_to_cache(std::move(ptr));
   }
 
@@ -113,7 +113,7 @@ class proper_actor_base : public Policies::resume_policy::template
     return priority_policy().cache_end();
   }
 
-  inline unique_mailbox_element_pointer cache_take_first() {
+  inline mailbox_element_uptr cache_take_first() {
     return priority_policy().cache_take_first();
   }
 
@@ -133,11 +133,10 @@ class proper_actor_base : public Policies::resume_policy::template
   // member functions from invoke policy
 
   template <class PartialFunctionOrBehavior>
-  inline bool invoke_message(unique_mailbox_element_pointer& ptr,
-                 PartialFunctionOrBehavior& fun,
-                 message_id awaited_response) {
-    return invoke_policy().invoke_message(dptr(), ptr, fun,
-                        awaited_response);
+  inline bool invoke_message(mailbox_element_uptr& ptr,
+                             PartialFunctionOrBehavior& fun,
+                             message_id awaited_response) {
+    return invoke_policy().invoke_message(dptr(), ptr, fun, awaited_response);
   }
 
  protected:
@@ -185,7 +184,7 @@ class proper_actor
 
   // required by event_based_resume::mixin::resume
 
-  bool invoke_message(unique_mailbox_element_pointer& ptr) {
+  bool invoke_message(mailbox_element_uptr& ptr) {
     CAF_LOG_TRACE("");
     auto bhvr = this->bhvr_stack().back();
     auto mid = this->bhvr_stack().back_id();
@@ -239,7 +238,7 @@ class proper_actor<Base, Policies, true>
   void dequeue_response(behavior& bhvr, message_id mid) override {
     // try to dequeue from cache first
     if (!this->cache_empty()) {
-      std::vector<unique_mailbox_element_pointer> tmp_vec;
+      std::vector<mailbox_element_uptr> tmp_vec;
       auto restore_cache = [&] {
         if (!tmp_vec.empty()) {
           this->cache_prepend(tmp_vec.begin(), tmp_vec.end());
@@ -298,8 +297,6 @@ class proper_actor<Base, Policies, true>
       // immediately enqueue timeout message if duration == 0s
       this->enqueue(this->address(), invalid_message_id,
                     std::move(msg), this->host());
-      // auto e = this->new_mailbox_element(this, std::move(msg));
-      // this->m_mailbox.enqueue(e);
     } else {
       this->delayed_send_tuple(this, d, std::move(msg));
     }

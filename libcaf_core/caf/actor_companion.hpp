@@ -47,9 +47,7 @@ class actor_companion : public extend<local_actor, actor_companion>::
 
  public:
 
-  using message_pointer = std::unique_ptr<mailbox_element, detail::disposer>;
-
-  using enqueue_handler = std::function<void (message_pointer)>;
+  using enqueue_handler = std::function<void (mailbox_element_uptr)>;
 
   /**
    * Removes the handler for incoming messages and terminates

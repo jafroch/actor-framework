@@ -55,12 +55,8 @@ struct tup_ptr_access<Pos, Max, false> {
 
 template <class... Ts>
 class tuple_vals : public message_data {
-
-  static_assert(sizeof...(Ts) > 0, "tuple_vals is not allowed to be empty");
-
-  using super = message_data;
-
  public:
+  static_assert(sizeof...(Ts) > 0, "tuple_vals is not allowed to be empty");
 
   using data_type = std::tuple<Ts...>;
 
@@ -70,45 +66,63 @@ class tuple_vals : public message_data {
 
   template <class... Us>
   tuple_vals(Us&&... args)
-      : super(false), m_data(std::forward<Us>(args)...) {}
+      : message_data(false),
+        m_data(std::forward<Us>(args)...) {
+    // nop
+  }
 
-  const void* native_data() const { return &m_data; }
+  const void* native_data() const override {
+    return &m_data;
+  }
 
-  void* mutable_native_data() { return &m_data; }
+  void* mutable_native_data() override {
+    return &m_data;
+  }
 
-  inline data_type& data() { return m_data; }
+  data_type& data() {
+    return m_data;
+  }
 
-  inline const data_type& data() const { return m_data; }
+  const data_type& data() const {
+    return m_data;
+  }
 
-  size_t size() const { return sizeof...(Ts); }
+  size_t size() const override {
+    return sizeof...(Ts);
+  }
 
-  tuple_vals* copy() const { return new tuple_vals(*this); }
+  tuple_vals* copy() const override {
+    return new tuple_vals(*this);
+  }
 
-  const void* at(size_t pos) const {
+  const void* at(size_t pos) const override {
     CAF_REQUIRE(pos < size());
     return tup_ptr_access<0, sizeof...(Ts)>::get(pos, m_data);
   }
 
-  void* mutable_at(size_t pos) {
+  void* mutable_at(size_t pos) override {
     CAF_REQUIRE(pos < size());
     return const_cast<void*>(at(pos));
   }
 
-  const uniform_type_info* type_at(size_t pos) const {
+  const uniform_type_info* type_at(size_t pos) const override {
     CAF_REQUIRE(pos < size());
     return m_types[pos];
   }
 
-  bool equals(const message_data& other) const {
-    if (size() != other.size()) return false;
-    const tuple_vals* o = dynamic_cast<const tuple_vals*>(&other);
-    if (o) {
-      return m_data == (o->m_data);
+  bool equals(const message_data& other) const override {
+    if (size() != other.size()) {
+      return false;
     }
-    return message_data::equals(other);
+    if (this == &other) {
+      return true;
+    }
+    // take shortcut when comparing two tuple_vals of same type
+    auto optr = dynamic_cast<const tuple_vals*>(&other);
+    return optr ? m_data == (optr->m_data) : message_data::equals(other);
   }
 
-  const std::type_info* type_token() const {
+  const std::type_info* type_token() const override {
     return detail::static_type_list<Ts...>::list;
   }
 
@@ -119,11 +133,8 @@ class tuple_vals : public message_data {
   }
 
  private:
-
   data_type m_data;
-
   static types_array<Ts...> m_types;
-
 };
 
 template <class... Ts>

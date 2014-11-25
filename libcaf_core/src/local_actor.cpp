@@ -33,8 +33,6 @@ namespace caf {
 // e.g., when calling address() in the ctor of a derived class
 local_actor::local_actor()
     : super(1),
-      m_dummy_node(),
-      m_current_node(&m_dummy_node),
       m_planned_exit_reason(exit_reason::not_exited) {
   // nop
 }
@@ -99,11 +97,11 @@ std::vector<group> local_actor::joined_groups() const {
 }
 
 void local_actor::reply_message(message&& what) {
-  auto& whom = m_current_node->sender;
+  auto& whom = m_current_msg->sender;
   if (!whom) {
     return;
   }
-  auto& id = m_current_node->mid;
+  auto& id = m_current_msg->mid;
   if (id.valid() == false || id.is_response()) {
     send_tuple(actor_cast<channel>(whom), std::move(what));
   } else if (!id.is_answered()) {
@@ -114,15 +112,17 @@ void local_actor::reply_message(message&& what) {
 }
 
 void local_actor::forward_message(const actor& dest, message_priority prio) {
-  if (!dest) {
+  if (!dest || !m_current_msg) {
     return;
   }
-  auto id = (prio == message_priority::high)
-              ? m_current_node->mid.with_high_priority()
-              : m_current_node->mid.with_normal_priority();
-  dest->enqueue(m_current_node->sender, id, m_current_node->msg, host());
-  // treat this message as asynchronous message from now on
-  m_current_node->mid = invalid_message_id;
+  auto new_id = (prio == message_priority::high)
+                  ? m_current_msg->mid.with_high_priority()
+                  : m_current_msg->mid.with_normal_priority();
+  m_current_msg->mid = new_id;
+  m_current_msg->marked = false;
+  mailbox_element_uptr tmp;
+  tmp.swap(m_current_msg);
+  dest->enqueue(std::move(tmp), host());
 }
 
 void local_actor::send_tuple(message_priority prio, const channel& dest,
@@ -152,9 +152,10 @@ void local_actor::delayed_send_tuple(message_priority prio, const channel& dest,
 }
 
 response_promise local_actor::make_response_promise() {
-  auto n = m_current_node;
-  response_promise result{address(), n->sender, n->mid.response_id()};
-  n->mid.mark_as_answered();
+  CAF_REQUIRE(m_current_msg != nullptr);
+  auto& msg = m_current_msg;
+  response_promise result{address(), msg->sender, msg->mid.response_id()};
+  msg->mid.mark_as_answered();
   return result;
 }
 

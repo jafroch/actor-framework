@@ -39,6 +39,11 @@ class abstract_channel : public ref_counted {
   /**
    * Enqueues a new message to the channel.
    */
+  virtual void enqueue(mailbox_element_uptr ptr, execution_unit* host);
+
+  /**
+   * Enqueues a new message to the channel.
+   */
   virtual void enqueue(const actor_addr& sender, message_id mid,
                        message content, execution_unit* host) = 0;
 

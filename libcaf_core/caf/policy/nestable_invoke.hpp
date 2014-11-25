@@ -37,30 +37,34 @@ namespace policy {
 
 class nestable_invoke : public invoke_policy<nestable_invoke> {
  public:
-  inline bool hm_should_skip(mailbox_element* node) {
+  bool hm_should_skip(const mailbox_element_uptr& node) {
     return node->marked;
   }
 
   template <class Actor>
-  inline mailbox_element* hm_begin(Actor* self, mailbox_element* node) {
-    auto previous = self->current_node();
-    self->current_node(node);
+  mailbox_element_uptr hm_begin(Actor* self, mailbox_element_uptr& msg) {
+    msg->marked = true;
+    mailbox_element_uptr previous;
+    self->current_msg().swap(previous);
+    self->current_msg().swap(msg);
     self->push_timeout();
-    node->marked = true;
     return previous;
   }
 
   template <class Actor>
-  inline void hm_cleanup(Actor* self, mailbox_element* previous) {
-    self->current_node()->marked = false;
-    self->current_node(previous);
+  void hm_cleanup(Actor* self, mailbox_element_uptr& previous,
+                  mailbox_element_uptr& msg) {
+    self->current_msg()->marked = false;
+    self->current_msg().swap(msg);
+    self->current_msg().swap(previous);
     self->pop_timeout();
   }
 
   template <class Actor>
-  inline void hm_revert(Actor* self, mailbox_element* previous) {
+  void hm_revert(Actor* self, mailbox_element_uptr& previous,
+                 mailbox_element_uptr& msg) {
     // same operation for blocking, i.e., nestable, invoke
-    hm_cleanup(self, previous);
+    hm_cleanup(self, previous, msg);
   }
 };
 

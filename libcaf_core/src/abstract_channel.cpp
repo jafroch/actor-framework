@@ -18,6 +18,9 @@
  ******************************************************************************/
 
 #include "caf/abstract_channel.hpp"
+
+#include "caf/mailbox_element.hpp"
+
 #include "caf/detail/singletons.hpp"
 
 namespace caf {
@@ -38,6 +41,10 @@ abstract_channel::abstract_channel(node_id nid, size_t initial_ref_count)
 
 abstract_channel::~abstract_channel() {
   // nop
+}
+
+void abstract_channel::enqueue(mailbox_element_uptr ptr, execution_unit* host) {
+  enqueue(ptr->sender, ptr->mid, ptr->msg(), host);
 }
 
 bool abstract_channel::is_remote() const {

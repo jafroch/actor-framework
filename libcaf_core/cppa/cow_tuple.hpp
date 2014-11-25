@@ -30,6 +30,7 @@
 #include "caf/ref_counted.hpp"
 
 #include "caf/detail/tuple_vals.hpp"
+#include "caf/detail/message_data.hpp"
 #include "caf/detail/decorated_tuple.hpp"
 #include "caf/detail/implicit_conversions.hpp"
 

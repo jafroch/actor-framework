@@ -17,50 +17,21 @@
  * http://www.boost.org/LICENSE_1_0.txt.                                      *
  ******************************************************************************/
 
-#ifndef CAF_THREADLESS_HPP
-#define CAF_THREADLESS_HPP
-
-#include "caf/atom.hpp"
-#include "caf/behavior.hpp"
-#include "caf/duration.hpp"
-
-#include "caf/policy/invoke_policy.hpp"
+#ifndef CAF_DETAIL_MAILBOX_ELEMENT_DISPOSER_HPP
+#define CAF_DETAIL_MAILBOX_ELEMENT_DISPOSER_HPP
 
 namespace caf {
-namespace policy {
-
-/**
- * An actor that is scheduled or otherwise managed.
- */
-class sequential_invoke : public invoke_policy<sequential_invoke> {
- public:
-  bool hm_should_skip(const mailbox_element_uptr&) {
-    return false;
-  }
-
-  template <class Actor>
-  mailbox_element_uptr hm_begin(Actor* self, mailbox_element_uptr& msg) {
-    // previous is always nullptr
-    CAF_REQUIRE(self->current_msg() == nullptr);
-    mailbox_element_uptr previous;
-    self->current_msg().swap(msg);
-    return previous;
-  }
-
-  template <class Actor>
-  void hm_cleanup(Actor* self, mailbox_element_uptr&,
-                  mailbox_element_uptr& msg) {
-    self->current_msg().swap(msg);
-  }
-
-  template <class Actor>
-  void hm_revert(Actor* self, mailbox_element_uptr&,
-                 mailbox_element_uptr& msg) {
-    self->current_msg().swap(msg);
-  }
-};
-
-} // namespace policy
+class mailbox_element;
 } // namespace caf
 
-#endif // CAF_THREADLESS_HPP
+namespace caf {
+namespace detail {
+
+struct mailbox_element_disposer {
+  void operator()(mailbox_element* ptr);
+};
+
+} // namespace detail
+} // namespace caf
+
+#endif // CAF_DETAIL_MAILBOX_ELEMENT_DISPOSER_HPP

@@ -72,7 +72,7 @@ class message_data : public ref_counted {
   // (default returns &typeid(void))
   virtual const std::type_info* type_token() const;
 
-  bool equals(const message_data& other) const;
+  virtual bool equals(const message_data& other) const;
 
   using const_iterator = message_iterator<message_data>;
 

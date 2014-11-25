@@ -38,6 +38,7 @@ set (LIBCAF_CORE_SRCS
      src/continue_helper.cpp
      src/decorated_tuple.cpp
      src/default_attachable.cpp
+     src/default_mailbox_element.cpp
      src/deserializer.cpp
      src/duration.cpp
      src/event_based_actor.cpp
@@ -52,6 +53,7 @@ set (LIBCAF_CORE_SRCS
      src/local_actor.cpp
      src/logging.cpp
      src/mailbox_element.cpp
+     src/mailbox_element_disposer.cpp
      src/match.cpp
      src/memory.cpp
      src/memory_managed.cpp

@@ -17,50 +17,27 @@
  * http://www.boost.org/LICENSE_1_0.txt.                                      *
  ******************************************************************************/
 
-#ifndef CAF_THREADLESS_HPP
-#define CAF_THREADLESS_HPP
+#ifndef CAF_DEFAULT_MAILBOX_ELEMENT_HPP
+#define CAF_DEFAULT_MAILBOX_ELEMENT_HPP
 
-#include "caf/atom.hpp"
-#include "caf/behavior.hpp"
-#include "caf/duration.hpp"
-
-#include "caf/policy/invoke_policy.hpp"
+#include "caf/mailbox_element.hpp"
 
 namespace caf {
-namespace policy {
+namespace detail {
 
-/**
- * An actor that is scheduled or otherwise managed.
- */
-class sequential_invoke : public invoke_policy<sequential_invoke> {
+class default_mailbox_element : public mailbox_element {
  public:
-  bool hm_should_skip(const mailbox_element_uptr&) {
-    return false;
-  }
+  default_mailbox_element() = default;
+  default_mailbox_element(actor_addr&& sender, message_id id,
+                          message&& content);
+  message& msg() override;
+  void dispose_mailbox_element() override;
 
-  template <class Actor>
-  mailbox_element_uptr hm_begin(Actor* self, mailbox_element_uptr& msg) {
-    // previous is always nullptr
-    CAF_REQUIRE(self->current_msg() == nullptr);
-    mailbox_element_uptr previous;
-    self->current_msg().swap(msg);
-    return previous;
-  }
-
-  template <class Actor>
-  void hm_cleanup(Actor* self, mailbox_element_uptr&,
-                  mailbox_element_uptr& msg) {
-    self->current_msg().swap(msg);
-  }
-
-  template <class Actor>
-  void hm_revert(Actor* self, mailbox_element_uptr&,
-                 mailbox_element_uptr& msg) {
-    self->current_msg().swap(msg);
-  }
+ private:
+  message m_msg;
 };
 
-} // namespace policy
+} // namespace detail
 } // namespace caf
 
-#endif // CAF_THREADLESS_HPP
+#endif // CAF_DEFAULT_MAILBOX_ELEMENT_HPP

@@ -234,6 +234,10 @@ class message {
    */
   optional<message> apply(message_handler handler);
 
+  inline void swap(message& other) {
+    m_vals.swap(other.m_vals);
+  }
+
   /** @cond PRIVATE */
 
   inline void force_detach() {

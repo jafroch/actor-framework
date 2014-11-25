@@ -66,9 +66,6 @@ cache_map& get_cache_map() {
   if (!cache) {
     cache = new cache_map;
     pthread_setspecific(s_key, cache);
-    // insert default types
-    unique_ptr<memory_cache> tmp(new basic_memory_cache<mailbox_element>);
-    cache->insert(make_pair(&typeid(mailbox_element), move(tmp)));
   }
   return *cache;
 }

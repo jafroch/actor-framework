@@ -41,7 +41,7 @@ class priority_policy {
    * if it's empty.
    */
   template <class Actor>
-  unique_mailbox_element_pointer next_message(Actor* self);
+  mailbox_element_uptr next_message(Actor* self);
 
   /**
    * Queries whether the mailbox is not empty.
@@ -49,9 +49,9 @@ class priority_policy {
   template <class Actor>
   bool has_next_message(Actor* self);
 
-  void push_to_cache(unique_mailbox_element_pointer ptr);
+  void push_to_cache(mailbox_element_uptr ptr);
 
-  using cache_type = std::vector<unique_mailbox_element_pointer>;
+  using cache_type = std::vector<mailbox_element_uptr>;
 
   using cache_iterator = cache_type::iterator;
 

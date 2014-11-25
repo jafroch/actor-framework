@@ -20,7 +20,11 @@
 #ifndef CAF_FWD_HPP
 #define CAF_FWD_HPP
 
+#include <memory>
 #include <cstdint>
+
+// declaring mailbox_element_uptr without disposer not possible
+#include "caf/detail/mailbox_element_disposer.hpp"
 
 namespace caf {
 
@@ -44,6 +48,7 @@ class execution_unit;
 class abstract_actor;
 class abstract_group;
 class blocking_actor;
+class mailbox_element;
 class message_handler;
 class uniform_type_info;
 class event_based_actor;
@@ -63,6 +68,10 @@ using actor_id = uint32_t;
 // intrusive pointer types
 using abstract_group_ptr = intrusive_ptr<abstract_group>;
 using actor_proxy_ptr = intrusive_ptr<actor_proxy>;
+
+// unique pointer types
+using mailbox_element_uptr = std::unique_ptr<mailbox_element,
+                                             detail::mailbox_element_disposer>;
 
 // functions
 template <class T, typename U>

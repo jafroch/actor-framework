@@ -41,19 +41,17 @@
 
 namespace caf {
 namespace mixin {
-        
+
 template<typename Base, int EventId = static_cast<int>(QEvent::User + 31337)>
 class actor_widget : public Base {
 
  public:
 
-    typedef typename actor_companion::message_pointer message_pointer;
-
     struct event_type : public QEvent {
 
-        message_pointer mptr;
+        mailbox_element_uptr mptr;
 
-        event_type(message_pointer ptr)
+        event_type(mailbox_element_uptr ptr)
         : QEvent(static_cast<QEvent::Type>(EventId)), mptr(std::move(ptr)) { }
 
     };
@@ -61,7 +59,7 @@ class actor_widget : public Base {
     template<typename... Ts>
     actor_widget(Ts&&... args) : Base(std::forward<Ts>(args)...) {
         m_companion.reset(detail::memory::create<actor_companion>());
-        m_companion->on_enqueue([=](message_pointer ptr) {
+        m_companion->on_enqueue([=](mailbox_element_uptr ptr) {
             qApp->postEvent(this, new event_type(std::move(ptr)));
         });
     }

@@ -165,10 +165,6 @@ std::string mapped_name_by_decorated_name(std::string&& str) {
 
 namespace {
 
-inline bool operator==(const unit_t&, const unit_t&) {
-  return true;
-}
-
 template <class T>
 struct type_token { };
 

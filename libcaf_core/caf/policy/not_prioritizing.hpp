@@ -34,13 +34,13 @@ class not_prioritizing {
 
  public:
 
-  using cache_type = std::deque<unique_mailbox_element_pointer>;
+  using cache_type = std::deque<mailbox_element_uptr>;
 
   using cache_iterator = cache_type::iterator;
 
   template <class Actor>
-  unique_mailbox_element_pointer next_message(Actor* self) {
-    return unique_mailbox_element_pointer{self->mailbox().try_pop()};
+  mailbox_element_uptr next_message(Actor* self) {
+    return mailbox_element_uptr{self->mailbox().try_pop()};
   }
 
   template <class Actor>
@@ -48,7 +48,7 @@ class not_prioritizing {
     return self->mailbox().can_fetch_more();
   }
 
-  inline void push_to_cache(unique_mailbox_element_pointer ptr) {
+  inline void push_to_cache(mailbox_element_uptr ptr) {
     m_cache.push_back(std::move(ptr));
   }
 
@@ -68,7 +68,7 @@ class not_prioritizing {
     return m_cache.empty();
   }
 
-  inline unique_mailbox_element_pointer cache_take_first() {
+  inline mailbox_element_uptr cache_take_first() {
     auto tmp = std::move(m_cache.front());
     m_cache.erase(m_cache.begin());
     return std::move(tmp);

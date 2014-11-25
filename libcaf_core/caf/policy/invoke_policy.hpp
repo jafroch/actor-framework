@@ -84,13 +84,13 @@ class invoke_policy {
    *     handled or dropped.
    */
   template <class Actor, class Fun>
-  bool invoke_message(Actor* self, unique_mailbox_element_pointer& node_ptr,
+  bool invoke_message(Actor* self, mailbox_element_uptr& node_ptr,
                       Fun& fun, message_id awaited_response) {
     if (!node_ptr) {
       return false;
     }
     CAF_LOG_TRACE("");
-    switch (handle_message(self, node_ptr.get(), fun, awaited_response)) {
+    switch (handle_message(self, node_ptr, fun, awaited_response)) {
       case hm_msg_handled:
         node_ptr.reset();
         return true;
@@ -206,13 +206,13 @@ class invoke_policy {
   //   - no: revert(...) -> set self back to state it had before begin()
 
   template <class Actor, class Fun>
-  handle_message_result handle_message(Actor* self, mailbox_element* node,
+  handle_message_result handle_message(Actor* self, mailbox_element_uptr& msg,
                                        Fun& fun, message_id awaited_response) {
     bool handle_sync_failure_on_mismatch = true;
-    if (dptr()->hm_should_skip(node)) {
+    if (dptr()->hm_should_skip(msg)) {
       return hm_skip_msg;
     }
-    switch (this->filter_msg(self, node)) {
+    switch (this->filter_msg(self, msg)) {
       case msg_type::normal_exit:
         CAF_LOG_DEBUG("dropped normal exit signal");
         return hm_drop_msg;
@@ -232,7 +232,7 @@ class invoke_policy {
         return hm_msg_handled;
       case msg_type::timeout: {
         CAF_LOG_DEBUG("handle timeout message");
-        auto& tm = node->msg.get_as<timeout_msg>(0);
+        auto& tm = msg->msg().get_as<timeout_msg>(0);
         self->handle_timeout(fun, tm.timeout_id);
         if (awaited_response.valid()) {
           self->mark_arrived(awaited_response);
@@ -245,12 +245,12 @@ class invoke_policy {
         CAF_ANNOTATE_FALLTHROUGH;
       case msg_type::sync_response:
         CAF_LOG_DEBUG("handle as synchronous response: "
-                 << CAF_TARG(node->msg, to_string) << ", "
-                 << CAF_MARG(node->mid, integer_value) << ", "
+                 << CAF_TARG(msg->msg(), to_string) << ", "
+                 << CAF_MARG(msg->mid, integer_value) << ", "
                  << CAF_MARG(awaited_response, integer_value));
-        if (awaited_response.valid() && node->mid == awaited_response) {
-          auto previous_node = dptr()->hm_begin(self, node);
-          auto res = invoke_fun(self, node->msg, node->mid, fun);
+        if (awaited_response.valid() && msg->mid == awaited_response) {
+          auto previous_node = dptr()->hm_begin(self, msg);
+          auto res = invoke_fun(self, msg->msg(), msg->mid, fun);
           if (!res && handle_sync_failure_on_mismatch) {
             CAF_LOG_WARNING("sync failure occured in actor "
                      << "with ID " << self->id());
@@ -258,20 +258,21 @@ class invoke_policy {
           }
           self->mark_arrived(awaited_response);
           self->remove_handler(awaited_response);
-          dptr()->hm_cleanup(self, previous_node);
+          dptr()->hm_cleanup(self, previous_node, msg);
           return hm_msg_handled;
         }
         return hm_cache_msg;
       case msg_type::ordinary:
         if (!awaited_response.valid()) {
-          auto previous_node = dptr()->hm_begin(self, node);
-          auto res = invoke_fun(self, node->msg, node->mid, fun);
+          auto previous_node = dptr()->hm_begin(self, msg);
+          auto res = invoke_fun(self, self->current_msg()->msg(),
+                                self->current_msg()->mid, fun);
           if (res) {
-            dptr()->hm_cleanup(self, previous_node);
+            dptr()->hm_cleanup(self, previous_node, msg);
             return hm_msg_handled;
           }
           // no match (restore self members)
-          dptr()->hm_revert(self, previous_node);
+          dptr()->hm_revert(self, previous_node, msg);
         }
         CAF_LOG_DEBUG_IF(awaited_response.valid(),
                   "ignored message; await response: "
@@ -297,9 +298,9 @@ class invoke_policy {
   // - expired synchronous response messages
 
   template <class Actor>
-  msg_type filter_msg(Actor* self, mailbox_element* node) {
-    const message& msg = node->msg;
-    auto mid = node->mid;
+  msg_type filter_msg(Actor* self, mailbox_element_uptr& ptr) {
+    const message& msg = ptr->msg();
+    auto mid = ptr->mid;
     if (msg.size() == 1) {
       if (msg.type_at(0)->equal_to(typeid(exit_msg))) {
         auto& em = msg.get_as<exit_msg>(0);

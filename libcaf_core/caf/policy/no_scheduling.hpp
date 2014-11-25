@@ -17,8 +17,8 @@
  * http://www.boost.org/LICENSE_1_0.txt.                                      *
  ******************************************************************************/
 
-#ifndef CAF_NO_SCHEDULING_HPP
-#define CAF_NO_SCHEDULING_HPP
+#ifndef CAF_POLICY_NO_SCHEDULING_HPP
+#define CAF_POLICY_NO_SCHEDULING_HPP
 
 #include <mutex>
 #include <thread>
@@ -28,6 +28,7 @@
 
 #include "caf/duration.hpp"
 #include "caf/exit_reason.hpp"
+#include "caf/actor_ostream.hpp"
 
 #include "caf/policy/scheduling_policy.hpp"
 
@@ -38,30 +39,31 @@
 #include "caf/detail/sync_request_bouncer.hpp"
 #include "caf/detail/single_reader_queue.hpp"
 
-
-#include "caf/actor_ostream.hpp"
-
-
-
 namespace caf {
 namespace policy {
 
 class no_scheduling {
-  using lock_type = std::unique_lock<std::mutex>;
  public:
+  using lock_type = std::unique_lock<std::mutex>;
   using timeout_type = std::chrono::high_resolution_clock::time_point;
 
   template <class Actor>
-  void enqueue(Actor* self, const actor_addr& sender, message_id mid,
-               message& msg, execution_unit*) {
-    auto ptr = self->new_mailbox_element(sender, mid, std::move(msg));
+  void enqueue(Actor* self, mailbox_element_uptr ptr, execution_unit*) {
+    auto mid = ptr->mid;
+    auto sender = ptr->sender;
     // returns false if mailbox has been closed
-    if (!self->mailbox().synchronized_enqueue(m_mtx, m_cv, ptr)) {
+    if (!self->mailbox().synchronized_enqueue(m_mtx, m_cv, ptr.release())) {
       if (mid.is_request()) {
         detail::sync_request_bouncer srb{self->exit_reason()};
         srb(sender, mid);
       }
     }
+  }
+
+  template <class Actor>
+  void enqueue(Actor* self, const actor_addr& sender,
+               message_id mid, message& msg, execution_unit* eu) {
+    enqueue(self, mailbox_element::create(sender, mid, std::move(msg)), eu);
   }
 
   template <class Actor>
@@ -107,4 +109,4 @@ class no_scheduling {
 } // namespace policy
 } // namespace caf
 
-#endif // CAF_NO_SCHEDULING_HPP
+#endif // CAF_POLICY_NO_SCHEDULING_HPP

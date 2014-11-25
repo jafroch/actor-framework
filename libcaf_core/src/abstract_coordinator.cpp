@@ -80,23 +80,23 @@ class timer_actor final : public detail::proper_actor<blocking_actor,
                                                       timer_actor_policies>,
                           public spawn_as_is {
  public:
-  inline unique_mailbox_element_pointer dequeue() {
+  inline mailbox_element_uptr dequeue() {
     await_data();
     return next_message();
   }
 
-  inline unique_mailbox_element_pointer try_dequeue(const hrc::time_point& tp) {
+  inline mailbox_element_uptr try_dequeue(const hrc::time_point& tp) {
     if (scheduling_policy().await_data(this, tp)) {
       return next_message();
     }
-    return unique_mailbox_element_pointer{};
+    return mailbox_element_uptr{};
   }
 
   void act() override {
     trap_exit(true);
     // setup & local variables
     bool done = false;
-    unique_mailbox_element_pointer msg_ptr;
+    mailbox_element_uptr msg_ptr;
     std::multimap<hrc::time_point, delayed_msg> messages;
     // message handling rules
     message_handler mfun{
@@ -109,7 +109,7 @@ class timer_actor final : public detail::proper_actor<blocking_actor,
         done = true;
       },
       others() >> [&] {
-        CAF_LOG_ERROR("unexpected: " << to_string(msg_ptr->msg));
+        CAF_LOG_ERROR("unexpected: " << to_string(msg_ptr->msg()));
       }
     };
     // loop
@@ -132,7 +132,7 @@ class timer_actor final : public detail::proper_actor<blocking_actor,
           }
         }
       }
-      mfun(msg_ptr->msg);
+      mfun(msg_ptr->msg());
       msg_ptr.reset();
     }
   }

@@ -21,6 +21,7 @@
 #define CAF_CONTEXT_HPP
 
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -52,6 +53,7 @@
 #include "caf/detail/behavior_stack.hpp"
 #include "caf/detail/typed_actor_util.hpp"
 #include "caf/detail/single_reader_queue.hpp"
+#include "caf/detail/default_mailbox_element.hpp"
 
 namespace caf {
 
@@ -166,10 +168,14 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
    * Sends `{what...} to `whom`.
    */
   template <class... Ts>
-  inline void send(const channel& whom, Ts&&... what) {
+  inline void send(const channel& whom, Ts&&... vs) {
     static_assert(sizeof...(Ts) > 0, "sizeof...(Ts) == 0");
-    send_tuple(message_priority::normal, whom,
-           make_message(std::forward<Ts>(what)...));
+    if (!whom) {
+      return;
+    }
+    whom->enqueue(mailbox_element::create(address(), message_id{},
+                                          std::forward<Ts>(vs)...),
+                  host());
   }
 
   /**
@@ -325,14 +331,16 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
    * @warning Only set during callback invocation.
    */
   inline message& last_dequeued() {
-    return m_current_node->msg;
+    assert(m_current_msg != nullptr);
+    return m_current_msg->msg();
   }
 
   /**
    * Returns the address of the last sender of the last dequeued message.
    */
   inline actor_addr& last_sender() {
-    return m_current_node->sender;
+    assert(m_current_msg != nullptr);
+    return m_current_msg->sender;
   }
 
   /**
@@ -452,12 +460,8 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
     return res;
   }
 
-  inline void current_node(mailbox_element* ptr) {
-    this->m_current_node = ptr;
-  }
-
-  inline mailbox_element* current_node() {
-    return this->m_current_node;
+  inline mailbox_element_uptr& current_msg() {
+    return m_current_msg;
   }
 
   inline message_id new_request_id() {
@@ -504,7 +508,7 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
   // returns 0 if last_dequeued() is an asynchronous or sync request message,
   // a response id generated from the request id otherwise
   inline message_id get_response_id() {
-    auto id = m_current_node->mid;
+    auto id = m_current_msg->mid;
     return (id.is_request()) ? id.response_id() : message_id();
   }
 
@@ -532,15 +536,6 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
 
   void cleanup(uint32_t reason);
 
-  inline mailbox_element* dummy_node() {
-    return &m_dummy_node;
-  }
-
-  template <class... Ts>
-  inline mailbox_element* new_mailbox_element(Ts&&... args) {
-    return mailbox_element::create(std::forward<Ts>(args)...);
-  }
-
  protected:
   // identifies the ID of the last sent synchronous request
   message_id m_last_request_id;
@@ -548,12 +543,9 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
   // identifies all IDs of sync messages waiting for a response
   std::forward_list<message_id> m_pending_responses;
 
-  // "default value" for m_current_node
-  mailbox_element m_dummy_node;
-
   // points to m_dummy_node if no callback is currently invoked,
   // points to the node under processing otherwise
-  mailbox_element* m_current_node;
+  mailbox_element_uptr m_current_msg;
 
   // set by quit
   uint32_t m_planned_exit_reason;

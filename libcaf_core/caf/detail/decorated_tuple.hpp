@@ -29,7 +29,6 @@
 
 #include "caf/detail/type_list.hpp"
 
-#include "caf/detail/tuple_vals.hpp"
 #include "caf/detail/message_data.hpp"
 
 namespace caf {

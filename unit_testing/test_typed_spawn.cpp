@@ -122,6 +122,10 @@ void test_typed_spawn(server_type ts) {
 
 struct get_state_msg {};
 
+inline bool operator==(const get_state_msg&, const get_state_msg&) {
+  return true;
+}
+
 using event_testee_type = typed_actor<replies_to<get_state_msg>::with<string>,
                                       replies_to<string>::with<void>,
                                       replies_to<float>::with<void>,

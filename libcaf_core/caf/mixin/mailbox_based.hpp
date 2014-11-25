@@ -33,7 +33,7 @@ namespace mixin {
 template <class Base, class Subtype>
 class mailbox_based : public Base {
  public:
-  using del = detail::disposer;
+  using del = detail::mailbox_element_disposer;
   using mailbox_type = detail::single_reader_queue<mailbox_element, del>;
 
   ~mailbox_based() {

@@ -165,13 +165,12 @@ void broker::invoke_message(const actor_addr& sender, message_id mid,
     return;
   }
   // prepare actor for invocation of message handler
-  m_dummy_node.sender = sender;
-  m_dummy_node.mid = mid;
-  std::swap(msg, m_dummy_node.msg);
+  // todo: re-use single mailbox element for sake of performance
+  auto ptr = mailbox_element::create(sender, mid, std::move(msg));
   try {
     auto bhvr = bhvr_stack().back();
     auto mid = bhvr_stack().back_id();
-    switch (m_invoke_policy.handle_message(this, &m_dummy_node, bhvr, mid)) {
+    switch (m_invoke_policy.handle_message(this, ptr, bhvr, mid)) {
       case policy::hm_msg_handled: {
         CAF_LOG_DEBUG("handle_message returned hm_msg_handled");
         while (!bhvr_stack().empty()
@@ -188,8 +187,8 @@ void broker::invoke_message(const actor_addr& sender, message_id mid,
       case policy::hm_cache_msg: {
         CAF_LOG_DEBUG("handle_message returned hm_skip_msg or hm_cache_msg");
         auto e = mailbox_element::create(sender, mid,
-                                         std::move(m_dummy_node.msg));
-        m_priority_policy.push_to_cache(unique_mailbox_element_pointer{e});
+                                         std::move(last_dequeued()));
+        m_priority_policy.push_to_cache(std::move(e));
         break;
       }
     }
@@ -206,8 +205,6 @@ void broker::invoke_message(const actor_addr& sender, message_id mid,
     quit(exit_reason::unhandled_exception);
   }
   // restore dummy node
-  m_dummy_node.sender = invalid_actor_addr;
-  std::swap(m_dummy_node.msg, msg);
   // cleanup if needed
   if (planned_exit_reason() != exit_reason::not_exited) {
     cleanup(planned_exit_reason());

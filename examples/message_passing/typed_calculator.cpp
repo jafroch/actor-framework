@@ -13,8 +13,19 @@ using namespace caf;
 namespace {
 
 struct shutdown_request { };
+inline bool operator==(const shutdown_request&, const shutdown_request&) {
+  return true;
+}
+
 struct plus_request { int a; int b; };
+inline bool operator==(const plus_request& lhs, const plus_request& rhs) {
+  return lhs.a == rhs.a && lhs.b == rhs.b;
+}
+
 struct minus_request { int a; int b; };
+inline bool operator==(const minus_request& lhs, const minus_request& rhs) {
+  return lhs.a == rhs.a && lhs.b == rhs.b;
+}
 
 using calculator_type = typed_actor<replies_to<plus_request>::with<int>,
                                     replies_to<minus_request>::with<int>,

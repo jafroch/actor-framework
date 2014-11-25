@@ -101,14 +101,16 @@ class actor_addr : detail::comparable<actor_addr>,
    */
   std::set<std::string> message_types() const;
 
- private:
+  void swap(actor_addr& other);
 
-  inline abstract_actor* get() const { return m_ptr.get(); }
+ private:
+  inline abstract_actor* get() const {
+    return m_ptr.get();
+  }
 
   explicit actor_addr(abstract_actor*);
 
   abstract_actor_ptr m_ptr;
-
 };
 
 } // namespace caf

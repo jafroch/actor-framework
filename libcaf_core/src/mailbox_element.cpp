@@ -19,17 +19,46 @@
 
 #include "caf/mailbox_element.hpp"
 
+#include "caf/detail/default_mailbox_element.hpp"
+
 namespace caf {
 
-mailbox_element::mailbox_element(actor_addr arg0, message_id arg1, message arg2)
+class default_mailbox_element : public mailbox_element {
+ public:
+  default_mailbox_element(actor_addr& sender, message_id id,
+                          message& content)
+      : mailbox_element(std::move(sender), id),
+        m_msg(std::move(content)) {
+    // nop
+  }
+  message& msg() override {
+    return m_msg;
+  }
+ private:
+  message m_msg;
+};
+
+mailbox_element::mailbox_element() : next(nullptr), marked(false) {
+  // nop
+}
+
+mailbox_element::mailbox_element(actor_addr sender, message_id id)
     : next(nullptr),
       marked(false),
-      sender(std::move(arg0)),
-      mid(arg1),
-      msg(std::move(arg2)) {}
+      sender(std::move(sender)),
+      mid(id) {
+  // nop
+}
 
 mailbox_element::~mailbox_element() {
   // nop
+}
+
+mailbox_element_uptr mailbox_element::create(actor_addr sender,
+                                                       message_id id,
+                                                       message content) {
+  return mailbox_element_uptr{new detail::default_mailbox_element(
+    std::move(sender), id, std::move(content))};
 }
 
 } // namespace caf

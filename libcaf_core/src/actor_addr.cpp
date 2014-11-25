@@ -70,4 +70,9 @@ std::set<std::string> actor_addr::message_types() const {
   return !m_ptr ? std::set<std::string>{} : m_ptr->message_types();
 }
 
+void actor_addr::swap(actor_addr& other) {
+  m_ptr.swap(other.m_ptr);
+}
+
+
 } // namespace caf

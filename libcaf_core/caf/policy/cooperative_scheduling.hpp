@@ -24,6 +24,7 @@
 
 #include "caf/message.hpp"
 #include "caf/execution_unit.hpp"
+#include "caf/mailbox_element.hpp"
 
 #include "caf/scheduler/abstract_coordinator.hpp"
 
@@ -34,9 +35,7 @@ namespace caf {
 namespace policy {
 
 class cooperative_scheduling {
-
  public:
-
   using timeout_type = int;
 
   template <class Actor>
@@ -55,10 +54,10 @@ class cooperative_scheduling {
   }
 
   template <class Actor>
-  void enqueue(Actor* self, const actor_addr& sender, message_id mid,
-         message& msg, execution_unit* eu) {
-    auto e = self->new_mailbox_element(sender, mid, std::move(msg));
-    switch (self->mailbox().enqueue(e)) {
+  void enqueue(Actor* self, mailbox_element_uptr ptr, execution_unit* eu) {
+    auto mid = ptr->mid;
+    auto sender = ptr->sender;
+    switch (self->mailbox().enqueue(ptr.release())) {
       case detail::enqueue_result::unblocked_reader: {
         // re-schedule actor
         if (eu)
@@ -81,6 +80,11 @@ class cooperative_scheduling {
     }
   }
 
+  template <class Actor>
+  void enqueue(Actor* self, const actor_addr& sender, message_id mid,
+               message& msg, execution_unit* eu) {
+    enqueue(self, mailbox_element::create(sender, mid, std::move(msg)), eu);
+  }
 };
 
 } // namespace policy

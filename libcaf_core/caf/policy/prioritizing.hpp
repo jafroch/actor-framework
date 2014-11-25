@@ -33,15 +33,15 @@ class prioritizing {
 
  public:
 
-  using cache_type = std::list<unique_mailbox_element_pointer>;
+  using cache_type = std::list<mailbox_element_uptr>;
 
   using cache_iterator = cache_type::iterator;
 
   template <class Actor>
-  unique_mailbox_element_pointer next_message(Actor* self) {
+  mailbox_element_uptr next_message(Actor* self) {
     if (!m_high.empty()) return take_first(m_high);
     // read whole mailbox
-    unique_mailbox_element_pointer tmp{self->mailbox().try_pop()};
+    mailbox_element_uptr tmp{self->mailbox().try_pop()};
     while (tmp) {
       if (tmp->mid.is_high_priority())
         m_high.push_back(std::move(tmp));
@@ -51,7 +51,7 @@ class prioritizing {
     }
     if (!m_high.empty()) return take_first(m_high);
     if (!m_low.empty()) return take_first(m_low);
-    return unique_mailbox_element_pointer{};
+    return mailbox_element_uptr{};
   }
 
   template <class Actor>
@@ -60,7 +60,7 @@ class prioritizing {
          self->mailbox().can_fetch_more();
   }
 
-  inline void push_to_cache(unique_mailbox_element_pointer ptr) {
+  inline void push_to_cache(mailbox_element_uptr ptr) {
     if (ptr->mid.is_high_priority()) {
       // insert before first element with low priority
       m_cache.insert(cache_low_begin(), std::move(ptr));
@@ -76,7 +76,7 @@ class prioritizing {
 
   inline bool cache_empty() const { return m_cache.empty(); }
 
-  inline unique_mailbox_element_pointer cache_take_first() {
+  inline mailbox_element_uptr cache_take_first() {
     return take_first(m_cache);
   }
 
@@ -105,12 +105,12 @@ class prioritizing {
   cache_iterator cache_low_begin() {
     // insert before first element with low priority
     return std::find_if(m_cache.begin(), m_cache.end(),
-              [](const unique_mailbox_element_pointer& e) {
+              [](const mailbox_element_uptr& e) {
       return !e->mid.is_high_priority();
     });
   }
 
-  inline unique_mailbox_element_pointer take_first(cache_type& from) {
+  inline mailbox_element_uptr take_first(cache_type& from) {
     auto tmp = std::move(from.front());
     from.erase(from.begin());
     return std::move(tmp);
