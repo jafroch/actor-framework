@@ -66,6 +66,8 @@ class work_stealing {
 
   // Holds job job queue of a worker and a random number generator.
   struct worker_data {
+    // Points to our next job.
+    resumable* next;
     // This queue is exposed to other workers that may attempt to steal jobs
     // from it and the central scheduling unit can push new jobs to the queue.
     queue_type queue;
@@ -74,7 +76,7 @@ class work_stealing {
     // needed to generate pseudo random numbers
     std::default_random_engine rengine;
     // initialize random engine
-    inline worker_data() : rdevice(), rengine(rdevice()) {
+    inline worker_data() : next(nullptr), rdevice(), rengine(rdevice()) {
       // nop
     }
   };
@@ -116,9 +118,11 @@ class work_stealing {
 
   template <class Worker>
   void internal_enqueue(Worker* self, resumable* job) {
-    d(self).queue.prepend(job);
-    // give others the opportunity to steal from us
-    after_resume(self);
+    auto& next = d(self).next;
+    if (next) {
+      d(self).queue.prepend(next);
+    }
+    next = job;
   }
 
   template <class Worker>
@@ -130,6 +134,13 @@ class work_stealing {
 
   template <class Worker>
   resumable* dequeue(Worker* self) {
+    resumable* job = nullptr;
+    auto& next = d(self).next;
+    if (next) {
+      job = next;
+      next = nullptr;
+      return job;
+    }
     // we wait for new jobs by polling our external queue: first, we
     // assume an active work load on the machine and perform aggresive
     // polling, then we relax our polling a bit and wait 50 us between
@@ -151,7 +162,6 @@ class work_stealing {
       // relaxed polling (infinite attempts) with 10 ms sleep interval
       {101, 0, 1,  std::chrono::microseconds{10000}}
     };
-    resumable* job = nullptr;
     for (auto& strat : strategies) {
       for (size_t i = 0; i < strat.attempts; i += strat.step_size) {
         job = d(self).queue.take_head();
@@ -186,7 +196,13 @@ class work_stealing {
   template <class Worker, class UnaryFunction>
   void foreach_resumable(Worker* self, UnaryFunction f) {
     auto next = [&] { return this->d(self).queue.take_head(); };
-    for (auto job = next(); job != nullptr; job = next()) {
+    resumable* job = d(self).next;
+    if (!job) {
+      job = next();
+    } else {
+      d(self).next = nullptr;
+    }
+    for (; job != nullptr; job = next()) {
       f(job);
     }
   }
