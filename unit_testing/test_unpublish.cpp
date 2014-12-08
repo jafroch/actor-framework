@@ -63,7 +63,7 @@ int main() {
   CAF_TEST(test_unpublish);
   auto d = spawn<dummy>();
   auto port = publish_at_some_port(4242, d);
-  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  this_thread::sleep_for(std::chrono::milliseconds(50));
   io::unpublish(d, port);
   // must fail now
   try {
