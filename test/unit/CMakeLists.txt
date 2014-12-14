@@ -1,5 +1,5 @@
 include_directories(${LIBCAF_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
-file(GLOB_RECURSE tests tests/*.cpp framework/*.cpp)
+file(GLOB_RECURSE tests main.cpp tests/*.cpp framework/*.cpp)
 add_executable(unit-test ${tests})
 target_link_libraries(unit-test
                       ${LD_FLAGS}
