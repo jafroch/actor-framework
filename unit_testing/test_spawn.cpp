@@ -4,7 +4,6 @@
 #include <functional>
 
 #include "test.hpp"
-#include "ping_pong.hpp"
 
 #include "caf/all.hpp"
 
@@ -546,46 +545,6 @@ void test_spawn() {
   self->await_all_other_actors_done();
   CAF_CHECKPOINT();
   self->trap_exit(true);
-  auto ping_actor = self->spawn<monitored+blocking_api>(ping, 10);
-  auto pong_actor = self->spawn<monitored+blocking_api>(pong, ping_actor);
-  self->link_to(pong_actor);
-  int i = 0;
-  int flags = 0;
-  self->delayed_send(self, chrono::seconds(1), atom("FooBar"));
-  // wait for DOWN and EXIT messages of pong
-  self->receive_for(i, 4) (
-    [&](const exit_msg& em) {
-      CAF_CHECK_EQUAL(em.source, pong_actor);
-      CAF_CHECK_EQUAL(em.reason, exit_reason::user_shutdown);
-      flags |= 0x01;
-    },
-    [&](const down_msg& dm) {
-      if (dm.source == pong_actor) {
-        flags |= 0x02;
-        CAF_CHECK_EQUAL(dm.reason, exit_reason::user_shutdown);
-      }
-      else if (dm.source == ping_actor) {
-        flags |= 0x04;
-        CAF_CHECK_EQUAL(dm.reason, exit_reason::normal);
-      }
-    },
-    [&](const atom_value& val) {
-      CAF_CHECK(val == atom("FooBar"));
-      flags |= 0x08;
-    },
-    others() >> [&]() {
-      CAF_FAILURE("unexpected message: " << to_string(self->last_dequeued()));
-    },
-    after(chrono::seconds(5)) >> [&]() {
-      CAF_FAILURE("timeout in file " << __FILE__ << " in line " << __LINE__);
-    }
-  );
-  // wait for termination of all spawned actors
-  self->await_all_other_actors_done();
-  CAF_CHECK_EQUAL(flags, 0x0F);
-  // verify pong messages
-  CAF_CHECK_EQUAL(pongs(), 10);
-  CAF_CHECKPOINT();
   spawn<priority_aware>(high_priority_testee);
   self->await_all_other_actors_done();
   CAF_CHECKPOINT();
@@ -593,7 +552,7 @@ void test_spawn() {
   self->await_all_other_actors_done();
   // test sending message to self via scoped_actor
   self->send(self, atom("check"));
-  self->receive (
+  self->receive(
     on(atom("check")) >> [] {
       CAF_CHECKPOINT();
     }
