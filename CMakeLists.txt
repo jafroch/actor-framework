@@ -254,7 +254,7 @@ set(LIBCAF_LIBRARIES "${LIBCAF_CORE_LIBRARY}"
 if(NOT CAF_NO_UNIT_TESTS)
   enable_testing()
   message(STATUS "Enter subdirectory unit_testing")
-  add_subdirectory(unit_testing)
+  add_subdirectory(test)
   add_dependencies(all_unit_tests libcaf_io)
   if(NOT CAF_NO_OPENCL AND EXISTS "${CMAKE_SOURCE_DIR}/libcaf_opencl/CMakeLists.txt")
     add_subdirectory(libcaf_opencl/unit_testing)
