@@ -300,29 +300,28 @@ private:
 } // namespace detail
 } // namespace unit
 
+// TODO: hook to logger.
+#define MESSAGE(msg) static_cast<void>(0);
+
 #define UNIT_CONCAT(lhs, rhs) lhs ## rhs
 #define UNIT_PASTE(lhs, rhs) UNIT_CONCAT(lhs, rhs)
 #define UNIT_UNIQUE(name) UNIT_PASTE(name, __LINE__)
 
 #define CHECK(...)                                                          \
-  do                                                                        \
-  {                                                                         \
+  do {                                                                      \
     (void)(::unit::detail::expr{this, __FILE__, __LINE__,                   \
                                 false, #__VA_ARGS__} ->* __VA_ARGS__);      \
     ::unit::engine::last_check_file(__FILE__);                              \
     ::unit::engine::last_check_line(__LINE__);                              \
-  }                                                                         \
-  while (false)
+  } while (false)
 
 #define FAIL(...)                                                           \
-  do                                                                        \
-  {                                                                         \
+  do {                                                                      \
     (void)(::unit::detail::expr{this, __FILE__, __LINE__, true,             \
                                 #__VA_ARGS__} ->* __VA_ARGS__);             \
     ::unit::engine::last_check_file(__FILE__);                              \
     ::unit::engine::last_check_line(__LINE__);                              \
-  }                                                                         \
-  while (false)
+  } while (false)
 
 #define REQUIRE(...)                                                        \
   do {                                                                      \
