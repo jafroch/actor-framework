@@ -1,6 +1,8 @@
-#include "framework/unit.hpp"
-#include "caf/all.hpp"
 #include <cstdlib>
+
+#include "framework/unit.hpp"
+
+#include "caf/all.hpp"
 
 int main(int argc, char* argv[]) {
   using namespace caf;

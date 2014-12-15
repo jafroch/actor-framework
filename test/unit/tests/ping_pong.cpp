@@ -18,13 +18,13 @@ size_t s_pongs = 0;
 behavior ping_behavior(local_actor* self, size_t num_pings) {
   return (on(atom("pong"), arg_match) >> [=](int value)->message {
         if (!self->last_sender()) {
-          MESSAGE("last_sender() invalid!");
+          ERROR("last_sender() invalid!");
         }
-        MESSAGE("received {'pong', " << value << "}");
+        INFO("received {'pong', " << value << "}");
         // cout << to_string(self->last_dequeued()) << endl;
         if (++s_pongs >= num_pings) {
-          MESSAGE("reached maximum, send {'EXIT', user_defined} "
-                 << "to last sender and quit with normal reason");
+          INFO("reached maximum, send {'EXIT', user_defined} "
+               << "to last sender and quit with normal reason");
           self->send_exit(self->last_sender(),
                   exit_reason::user_shutdown);
           self->quit();
@@ -40,7 +40,7 @@ behavior ping_behavior(local_actor* self, size_t num_pings) {
 
 behavior pong_behavior(local_actor* self) {
   return (on(atom("ping"), arg_match) >> [](int value)->message {
-        MESSAGE("received {'ping', " << value << "}");
+        INFO("received {'ping', " << value << "}");
         return make_message(atom("pong"), value + 1);
       },
       others() >> [=] {
@@ -114,9 +114,11 @@ TEST("ping-pong") {
       flags |= 0x08;
     },
     others() >> [&]() {
+      // FIXME: abort test with error message.
       //CAF_FAILURE("unexpected message: " << to_string(self->last_dequeued()));
     },
     after(std::chrono::seconds(5)) >> [&]() {
+      // FIXME: abort test with error message.
       //CAF_FAILURE("timeout in file " << __FILE__ << " in line " << __LINE__);
     }
   );

@@ -1,9 +1,5 @@
 #include "framework/unit.hpp"
 
-#include <cassert>
-#include <cstdlib>
-#include <fstream>
-
 char const* unit::color::reset        = "\033[0m";
 char const* unit::color::black        = "\033[30m";
 char const* unit::color::red          = "\033[31m";
@@ -64,73 +60,6 @@ void engine::add(char const* name, std::unique_ptr<test> t) {
 
 namespace {
 
-class logger {
- public:
-  enum class level : int {
-    quiet   = 0,
-    error   = 1,
-    info    = 2,
-    verbose = 3,
-    massive = 4
-  };
-
-  class message {
-   public:
-    message(logger& l, level lvl)
-      : logger_{l},
-        level_{lvl} {
-    }
-
-    template <typename T>
-    message& operator<<(T const& x) {
-      logger_.log(level_, x);
-      return *this;
-    }
-
-   private:
-    logger& logger_;
-    level level_;
-  };
-
-  logger(int lvl_cons, int lvl_file, std::string const& logfile)
-    : level_console_(static_cast<level>(lvl_cons)),
-      level_file_(static_cast<level>(lvl_file)),
-      console_{std::cerr} {
-    if (! logfile.empty())
-      file_.open(logfile, std::ofstream::out | std::ofstream::app);
-  }
-
-  template <typename T>
-  void log(level lvl, T const& x) {
-    if (lvl <= level_console_)
-      console_ << x;
-    if (lvl <= level_file_)
-      file_ << x;
-  }
-
-  message error() {
-    return message{*this, level::error};
-  }
-
-  message info() {
-    return message{*this, level::info};
-  }
-
-  message verbose() {
-    return message{*this, level::verbose};
-  }
-
-  message massive() {
-    return message{*this, level::massive};
-  }
-
- private:
-  level level_console_;
-  level level_file_;
-  std::ostream& console_;
-  std::ofstream file_;
-};
-
 std::string render(std::chrono::microseconds t) {
   return t.count() > 1000000
     ? (std::to_string(t.count() / 1000000) + '.'
@@ -189,7 +118,9 @@ bool engine::run(bool colorize,
     color::bold_white   = "";
   }
 
-  logger log{verbosity_console, verbosity_file, log_file};
+  if (! logger::init(verbosity_console, verbosity_file, log_file))
+    return false;
+  auto& log = logger::instance();
 
   std::chrono::microseconds runtime{0};
   size_t total_suites = 0;
@@ -310,6 +241,46 @@ bool engine::run(bool colorize,
 engine& engine::instance() {
   static engine e;
   return e;
+}
+
+logger::message::message(logger& l, level lvl)
+  : logger_{l},
+    level_{lvl} {
+}
+
+bool logger::init(int lvl_cons, int lvl_file, std::string const& logfile) {
+  instance().level_console_ = static_cast<level>(lvl_cons);
+  instance().level_file_ = static_cast<level>(lvl_file);
+  if (! logfile.empty()) {
+    instance().file_.open(logfile, std::ofstream::out | std::ofstream::app);
+    return !! instance().file_;
+  }
+  return true;
+}
+
+logger& logger::instance() {
+  static logger l;
+  return l;
+}
+
+logger::message logger::error() {
+  return message{*this, level::error};
+}
+
+logger::message logger::info() {
+  return message{*this, level::info};
+}
+
+logger::message logger::verbose() {
+  return message{*this, level::verbose};
+}
+
+logger::message logger::massive() {
+  return message{*this, level::massive};
+}
+
+logger::logger()
+  : console_{std::cerr} {
 }
 
 } // namespace unit

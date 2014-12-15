@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <iostream>
 #include <iostream>
 #include <regex>
@@ -84,6 +85,57 @@ class engine {
   static engine& instance();
 
   std::map<std::string, std::vector<std::unique_ptr<test>>> suites_;
+};
+
+class logger {
+ public:
+  enum class level : int {
+    quiet   = 0,
+    error   = 1,
+    info    = 2,
+    verbose = 3,
+    massive = 4
+  };
+
+  class message {
+   public:
+    message(logger& l, level lvl);
+
+    template <typename T>
+    message& operator<<(T const& x) {
+      logger_.log(level_, x);
+      return *this;
+    }
+
+   private:
+    logger& logger_;
+    level level_;
+  };
+
+  static bool init(int lvl_cons, int lvl_file, std::string const& logfile);
+
+  static logger& instance();
+
+  template <typename T>
+  void log(level lvl, T const& x) {
+    if (lvl <= level_console_)
+      console_ << x;
+    if (lvl <= level_file_)
+      file_ << x;
+  }
+
+  message error();
+  message info();
+  message verbose();
+  message massive();
+
+ private:
+  logger();
+
+  level level_console_;
+  level level_file_;
+  std::ostream& console_;
+  std::ofstream file_;
 };
 
 namespace detail {
@@ -300,8 +352,9 @@ private:
 } // namespace detail
 } // namespace unit
 
-// TODO: hook to logger.
-#define MESSAGE(msg) static_cast<void>(0);
+#define ERROR(msg) ::unit::logger::instance().error() << msg << '\n'
+#define INFO(msg) ::unit::logger::instance().info() << msg << '\n'
+#define VERBOSE(msg) ::unit::logger::instance().verbose() << msg << '\n'
 
 #define UNIT_CONCAT(lhs, rhs) lhs ## rhs
 #define UNIT_PASTE(lhs, rhs) UNIT_CONCAT(lhs, rhs)
