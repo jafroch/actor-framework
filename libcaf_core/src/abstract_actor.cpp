@@ -202,7 +202,7 @@ actor_addr abstract_actor::address() const {
 
 void abstract_actor::cleanup(uint32_t reason) {
   CAF_LOG_TRACE(CAF_ARG(reason));
-  CAF_REQUIRE(reason != exit_reason::not_exited);
+  CAF_ASSERT(reason != exit_reason::not_exited);
   // move everyhting out of the critical section before processing it
   attachable_ptr head;
   { // lifetime scope of guard

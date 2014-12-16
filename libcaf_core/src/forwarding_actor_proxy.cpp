@@ -33,7 +33,7 @@ forwarding_actor_proxy::forwarding_actor_proxy(actor_id aid, node_id nid,
                                                actor manager)
     : actor_proxy(aid, nid),
       m_manager(manager) {
-  CAF_REQUIRE(manager != invalid_actor);
+  CAF_ASSERT(manager != invalid_actor);
   CAF_LOG_INFO(CAF_ARG(aid) << ", " << CAF_TARG(nid, to_string));
 }
 

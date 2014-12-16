@@ -166,9 +166,9 @@ class basic_memory_cache : public memory_cache {
   void* downcast(memory_managed* ptr) { return static_cast<T*>(ptr); }
 
   void release_instance(void* vptr) override {
-    CAF_REQUIRE(vptr != nullptr);
+    CAF_ASSERT(vptr != nullptr);
     auto ptr = reinterpret_cast<T*>(vptr);
-    CAF_REQUIRE(ptr->outer_memory != nullptr);
+    CAF_ASSERT(ptr->outer_memory != nullptr);
     auto wptr = static_cast<wrapper*>(ptr->outer_memory);
     wptr->destroy();
     wptr->deallocate();

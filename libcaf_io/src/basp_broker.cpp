@@ -52,14 +52,14 @@ behavior basp_broker::make_behavior() {
     [=](new_data_msg& msg) {
       CAF_LOGM_TRACE("make_behavior$new_data_msg",
                      "handle = " << msg.handle.id());
-      CAF_REQUIRE(m_ctx.count(msg.handle) > 0);
+      CAF_ASSERT(m_ctx.count(msg.handle) > 0);
       new_data(m_ctx[msg.handle], msg.buf);
     },
     // received from underlying broker implementation
     [=](const new_connection_msg& msg) {
       CAF_LOGM_TRACE("make_behavior$new_connection_msg",
                      "handle = " << msg.handle.id());
-      CAF_REQUIRE(m_ctx.count(msg.handle) == 0);
+      CAF_ASSERT(m_ctx.count(msg.handle) == 0);
       auto& ctx = m_ctx[msg.handle];
       ctx.hdl = msg.handle;
       ctx.handshake_data = nullptr;
@@ -198,7 +198,7 @@ void basp_broker::dispatch(const basp::header& hdr, message&& msg) {
   }
   CAF_LOG_DEBUG_IF(src == invalid_actor_addr, "src == invalid_actor_addr");
   auto dest = singletons::get_actor_registry()->get(hdr.dest_actor);
-  CAF_REQUIRE(!dest || dest->node() == node());
+  CAF_ASSERT(!dest || dest->node() == node());
   // intercept message used for link signaling
   if (dest && src == dest) {
     if (msg.size() == 2 && typeid(actor_addr) == *msg.type_at(1)) {
@@ -252,7 +252,7 @@ void basp_broker::dispatch(const actor_addr& from, const actor_addr& to,
   CAF_LOG_TRACE(CAF_TARG(from, to_string)
                 << ", " << CAF_MARG(mid, integer_value) << ", "
                 << CAF_TARG(to, to_string) << ", " << CAF_TARG(msg, to_string));
-  CAF_REQUIRE(to != nullptr);
+  CAF_ASSERT(to != nullptr);
   auto dest = to.node();
   auto route = get_route(dest);
   if (route.invalid()) {
@@ -357,7 +357,7 @@ basp_broker::handle_basp_header(connection_context& ctx,
       // must not happen
       throw std::logic_error("invalid operation");
     case basp::dispatch_message: {
-      CAF_REQUIRE(payload != nullptr);
+      CAF_ASSERT(payload != nullptr);
       binary_deserializer bd{payload->data(), payload->size(), &m_namespace};
       message content;
       bd.read(content, m_meta_msg);
@@ -365,7 +365,7 @@ basp_broker::handle_basp_header(connection_context& ctx,
       break;
     }
     case basp::announce_proxy_instance: {
-      CAF_REQUIRE(payload == nullptr);
+      CAF_ASSERT(payload == nullptr);
       // source node has created a proxy for one of our actors
       auto entry = singletons::get_actor_registry()->get_entry(hdr.dest_actor);
       auto nid = hdr.source_node;
@@ -386,7 +386,7 @@ basp_broker::handle_basp_header(connection_context& ctx,
       break;
     }
     case basp::kill_proxy_instance: {
-      CAF_REQUIRE(payload == nullptr);
+      CAF_ASSERT(payload == nullptr);
       // we have a proxy to an actor that has been terminated
       auto ptr = m_namespace.get(hdr.source_node, hdr.source_actor);
       if (ptr) {
@@ -398,7 +398,7 @@ basp_broker::handle_basp_header(connection_context& ctx,
       break;
     }
     case basp::client_handshake: {
-      CAF_REQUIRE(payload == nullptr);
+      CAF_ASSERT(payload == nullptr);
       if (ctx.remote_id != invalid_node_id) {
         CAF_LOG_INFO("received unexpected client handshake");
         return close_connection;
@@ -416,7 +416,7 @@ basp_broker::handle_basp_header(connection_context& ctx,
       break;
     }
     case basp::server_handshake: {
-      CAF_REQUIRE(payload != nullptr);
+      CAF_ASSERT(payload != nullptr);
       if (ctx.handshake_data == nullptr) {
         CAF_LOG_INFO("received unexpected server handshake");
         return close_connection;
@@ -548,9 +548,9 @@ basp_broker::connection_info basp_broker::get_route(const id_type& dest) {
 actor_proxy_ptr basp_broker::make_proxy(const id_type& nid, actor_id aid) {
   CAF_LOG_TRACE(CAF_TSARG(nid) << ", "
               << CAF_ARG(aid));
-  CAF_REQUIRE(m_current_context != nullptr);
-  CAF_REQUIRE(aid != invalid_actor_id);
-  CAF_REQUIRE(nid != node());
+  CAF_ASSERT(m_current_context != nullptr);
+  CAF_ASSERT(aid != invalid_actor_id);
+  CAF_ASSERT(nid != node());
   // this member function is being called whenever we deserialize a
   // payload received from a remote node; if a remote node N sends
   // us a handle to a third node T, we assume that N has a route to T
@@ -607,7 +607,7 @@ void basp_broker::add_route(const id_type& nid, connection_handle hdl) {
 
 bool basp_broker::try_set_default_route(const id_type& nid,
                                         connection_handle hdl) {
-  CAF_REQUIRE(!hdl.invalid());
+  CAF_ASSERT(!hdl.invalid());
   auto& entry = m_routes[nid];
   if (entry.first.invalid()) {
     CAF_LOG_DEBUG("new default route: " << to_string(nid) << " -> "
@@ -637,7 +637,7 @@ void basp_broker::init_handshake_as_client(connection_context& ctx,
 void basp_broker::init_handshake_as_sever(connection_context& ctx,
                                           actor_addr addr) {
   CAF_LOG_TRACE(CAF_ARG(this));
-  CAF_REQUIRE(node() != invalid_node_id);
+  CAF_ASSERT(node() != invalid_node_id);
   auto& buf = wr_buf(ctx.hdl);
   auto wrpos = buf.size();
   char padding[basp::header_size];

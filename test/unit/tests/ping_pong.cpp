@@ -74,8 +74,8 @@ void pong(blocking_actor* self, actor ping_actor) {
 
 void event_based_pong(event_based_actor* self, actor ping_actor) {
   CAF_LOGF_TRACE("ping_actor = " << to_string(ping_actor));
-  // FIXME: CAF_SATISFY() can only be called inside CAF_TEST().
-  //CAF_SATISFY(ping_actor != invalid_actor);
+  // FIXME: CAF_REQUIRE() can only be called inside CAF_TEST().
+  //CAF_REQUIRE(ping_actor != invalid_actor);
   self->send(ping_actor, atom("pong"), 0); // kickoff
   self->become(pong_behavior(self));
 }

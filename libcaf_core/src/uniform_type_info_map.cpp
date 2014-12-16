@@ -605,7 +605,7 @@ class default_meta_message : public uniform_type_info {
     std::vector<std::string> elements;
     split(elements, name, is_any_of("+"));
     auto uti_map = detail::singletons::get_uniform_type_info_map();
-    CAF_REQUIRE(elements.size() > 0 && elements.front() == "@<>");
+    CAF_ASSERT(elements.size() > 0 && elements.front() == "@<>");
     // ignore first element, because it's always "@<>"
     for (size_t i = 1; i != elements.size(); ++i) {
       try {
@@ -634,7 +634,7 @@ class default_meta_message : public uniform_type_info {
   }
   void serialize(const void* ptr, serializer* sink) const override {
     auto& msg = *cast(ptr);
-    CAF_REQUIRE(msg.size() == m_elements.size());
+    CAF_ASSERT(msg.size() == m_elements.size());
     for (size_t i = 0; i < m_elements.size(); ++i) {
       m_elements[i]->serialize(msg.at(i), sink);
     }

@@ -123,18 +123,18 @@ using ::backtrace_symbols_fd;
 #endif
 
 #ifdef CAF_ENABLE_RUNTIME_CHECKS
-#   define CAF_REQUIRE__(stmt, file, line)                                     \
+#   define CAF_ASSERT__(stmt, file, line)                                      \
     printf("%s:%u: requirement failed '%s'\n", file, line, stmt); {            \
       void* array[10];                                                         \
       auto caf_bt_size = ::caf::detail::backtrace(array, 10);                  \
       ::caf::detail::backtrace_symbols_fd(array, caf_bt_size, 2);              \
     } abort()
-#   define CAF_REQUIRE(stmt)                                                   \
+#   define CAF_ASSERT(stmt)                                                    \
     if (static_cast<bool>(stmt) == false) {                                    \
-      CAF_REQUIRE__(#stmt, __FILE__, __LINE__);                                \
+      CAF_ASSERT__(#stmt, __FILE__, __LINE__);                                 \
     } static_cast<void>(0)
 #else
-#   define CAF_REQUIRE(unused) static_cast<void>(0)
+#   define CAF_ASSERT(unused) static_cast<void>(0)
 #endif
 
 #define CAF_CRITICAL__(error, file, line) {                                    \

@@ -73,7 +73,7 @@ behavior_impl::behavior_impl(duration tout) : m_timeout(tout) {
 }
 
 behavior_impl::pointer behavior_impl::or_else(const pointer& other) {
-  CAF_REQUIRE(other != nullptr);
+  CAF_ASSERT(other != nullptr);
   return new combinator(this, other);
 }
 

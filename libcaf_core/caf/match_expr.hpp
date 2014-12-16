@@ -442,7 +442,7 @@ class match_expr {
   template <class Tuple>
   uint64_t get_cache_entry(const std::type_info* type_token,
                            const Tuple& value) {
-    CAF_REQUIRE(type_token != nullptr);
+    CAF_ASSERT(type_token != nullptr);
     if (value.dynamically_typed()) {
       return m_dummy.second; // all groups enabled
     }

@@ -376,7 +376,7 @@ private:
     ::unit::engine::last_check_line(__LINE__);                              \
   } while (false)
 
-#define CAF_SATISFY(...)                                                    \
+#define CAF_REQUIRE(...)                                                    \
   do {                                                                      \
     auto CAF_UNIQUE(__result) =                                             \
     ::unit::detail::expr{this, __FILE__, __LINE__, false, #__VA_ARGS__}     \

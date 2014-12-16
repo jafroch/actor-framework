@@ -165,7 +165,7 @@ class message {
    */
   template <class T>
   inline const T& get_as(size_t p) const {
-    CAF_REQUIRE(*(type_at(p)) == typeid(T));
+    CAF_ASSERT(*(type_at(p)) == typeid(T));
     return *reinterpret_cast<const T*>(at(p));
   }
 
@@ -174,7 +174,7 @@ class message {
    */
   template <class T>
   inline T& get_as_mutable(size_t p) {
-    CAF_REQUIRE(*(type_at(p)) == typeid(T));
+    CAF_ASSERT(*(type_at(p)) == typeid(T));
     return *reinterpret_cast<T*>(mutable_at(p));
   }
 

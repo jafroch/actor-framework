@@ -51,7 +51,7 @@ class worker : public execution_unit {
   }
 
   void start() {
-    CAF_REQUIRE(m_this_thread.get_id() == std::thread::id{});
+    CAF_ASSERT(m_this_thread.get_id() == std::thread::id{});
     auto this_worker = this;
     m_this_thread = std::thread{[this_worker] {
       CAF_LOGC_TRACE("caf::scheduler::worker", "start$lambda",
@@ -68,7 +68,7 @@ class worker : public execution_unit {
    * source, i.e., from any other thread.
    */
   void external_enqueue(job_ptr job) {
-    CAF_REQUIRE(job != nullptr);
+    CAF_ASSERT(job != nullptr);
     CAF_LOG_TRACE("id = " << id() << " actor id " << id_of(job));
     m_policy.external_enqueue(this, job);
   }
@@ -79,7 +79,7 @@ class worker : public execution_unit {
    * @warning Must not be called from other threads.
    */
   void exec_later(job_ptr job) override {
-    CAF_REQUIRE(job != nullptr);
+    CAF_ASSERT(job != nullptr);
     CAF_LOG_TRACE("id = " << id() << " actor id " << id_of(job));
     m_policy.internal_enqueue(this, job);
   }
@@ -123,7 +123,7 @@ class worker : public execution_unit {
     // scheduling loop
     for (;;) {
       auto job = m_policy.dequeue(this);
-      CAF_REQUIRE(job != nullptr);
+      CAF_ASSERT(job != nullptr);
       CAF_LOG_DEBUG("resume actor " << id_of(job));
       CAF_PUSH_AID_FROM_PTR(dynamic_cast<abstract_actor*>(job));
       switch (job->resume(this, m_max_throughput)) {

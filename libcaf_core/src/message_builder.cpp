@@ -47,12 +47,12 @@ class message_builder::dynamic_msg_data : public detail::message_data {
   }
 
   const void* at(size_t pos) const override {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return m_elements[pos]->val;
   }
 
   void* mutable_at(size_t pos) override {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return m_elements[pos]->val;
   }
 
@@ -65,7 +65,7 @@ class message_builder::dynamic_msg_data : public detail::message_data {
   }
 
   const uniform_type_info* type_at(size_t pos) const override {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return m_elements[pos]->ti;
   }
 

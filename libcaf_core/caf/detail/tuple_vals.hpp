@@ -85,17 +85,17 @@ class tuple_vals : public message_data {
   tuple_vals* copy() const { return new tuple_vals(*this); }
 
   const void* at(size_t pos) const {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return tup_ptr_access<0, sizeof...(Ts)>::get(pos, m_data);
   }
 
   void* mutable_at(size_t pos) {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return const_cast<void*>(at(pos));
   }
 
   const uniform_type_info* type_at(size_t pos) const {
-    CAF_REQUIRE(pos < size());
+    CAF_ASSERT(pos < size());
     return m_types[pos];
   }
 

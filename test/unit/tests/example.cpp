@@ -12,5 +12,5 @@ CAF_TEST("bar")
 {
   auto i = 42;
   i *= 2;
-  CAF_SATISFY(i == 84);
+  CAF_REQUIRE(i == 84);
 }

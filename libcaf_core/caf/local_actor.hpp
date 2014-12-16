@@ -513,7 +513,7 @@ class local_actor : public extend<abstract_actor>::with<mixin::memory_cached> {
   void forward_message(const actor& new_receiver, message_priority prio);
 
   inline bool awaits(message_id response_id) {
-    CAF_REQUIRE(response_id.is_response());
+    CAF_ASSERT(response_id.is_response());
     return std::any_of(m_pending_responses.begin(), m_pending_responses.end(),
                        [=](message_id other) { return response_id == other; });
   }
