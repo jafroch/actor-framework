@@ -1,5 +1,7 @@
 #include "framework/unit.hpp"
 
+#include <thread>
+
 char const* unit::color::reset        = "\033[0m";
 char const* unit::color::black        = "\033[30m";
 char const* unit::color::red          = "\033[31m";
@@ -94,6 +96,7 @@ bool engine::run(bool colorize,
                  std::string const& log_file,
                  int verbosity_console,
                  int verbosity_file,
+                 int max_runtime,
                  std::regex const& suites,
                  std::regex const& not_suites,
                  std::regex const& tests,
@@ -154,6 +157,14 @@ bool engine::run(bool colorize,
       auto failed_require = false;
       auto start = std::chrono::steady_clock::now();
       try {
+        auto test_name = t->__name();
+        std::thread{[test_name, max_runtime] {
+          std::this_thread::sleep_for(std::chrono::seconds(max_runtime));
+          std::cerr
+            << "WATCHDOG: test " << test_name << " did not complete within "
+            << max_runtime << " seconds" << std::endl;
+          ::abort();
+        }}.detach();
         t->__run();
       } catch (require_error const& e) {
         failed_require = true;

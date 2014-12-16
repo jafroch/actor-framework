@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
   std::string log_file;
   int verbosity_console = 3;
   int verbosity_file = 3;
+  int max_runtime = 10;
   std::regex suites{".*"};
   std::regex not_suites;
   std::regex tests{".*"};
@@ -29,6 +30,9 @@ int main(int argc, char* argv[]) {
     on("-V", arg_match) >> [&](std::string const& n) {
       verbosity_file = std::strtol(n.c_str(), nullptr, 10);
     },
+    on("-r", arg_match) >> [&](std::string const& n) {
+      max_runtime = std::strtol(n.c_str(), nullptr, 10);
+    },
     on("-s", arg_match) >> [&](std::string const& str) {
       suites = str;
     },
@@ -46,7 +50,7 @@ int main(int argc, char* argv[]) {
       std::exit(1);
     }
   );
-  auto flags = "nlvVsStT";
+  auto flags = "nlvVrsStT";
   for (int i = 1; i < argc; ++i) {
     message_builder builder;
     std::string arg{argv[i]};
@@ -66,7 +70,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto result = unit::engine::run(colorize, log_file, verbosity_console,
-                                  verbosity_file, suites, not_suites, tests,
-                                  not_tests);
+                                  verbosity_file, max_runtime, suites,
+                                  not_suites, tests, not_tests);
   return result ? 0 : 1;
 }
