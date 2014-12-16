@@ -352,15 +352,15 @@ private:
 } // namespace detail
 } // namespace unit
 
-#define ERROR(msg) ::unit::logger::instance().error() << msg << '\n'
-#define INFO(msg) ::unit::logger::instance().info() << msg << '\n'
-#define VERBOSE(msg) ::unit::logger::instance().verbose() << msg << '\n'
+#define CAF_TEST_ERROR(msg) ::unit::logger::instance().error() << msg << '\n'
+#define CAF_TEST_INFO(msg) ::unit::logger::instance().info() << msg << '\n'
+#define CAF_TEST_VERBOSE(msg) ::unit::logger::instance().verbose() << msg << '\n'
 
-#define UNIT_CONCAT(lhs, rhs) lhs ## rhs
-#define UNIT_PASTE(lhs, rhs) UNIT_CONCAT(lhs, rhs)
-#define UNIT_UNIQUE(name) UNIT_PASTE(name, __LINE__)
+#define CAF_CONCAT(lhs, rhs) lhs ## rhs
+#define CAF_PASTE(lhs, rhs) CAF_CONCAT(lhs, rhs)
+#define CAF_UNIQUE(name) CAF_PASTE(name, __LINE__)
 
-#define CHECK(...)                                                          \
+#define CAF_CHECK(...)                                                      \
   do {                                                                      \
     (void)(::unit::detail::expr{this, __FILE__, __LINE__,                   \
                                 false, #__VA_ARGS__} ->* __VA_ARGS__);      \
@@ -368,7 +368,7 @@ private:
     ::unit::engine::last_check_line(__LINE__);                              \
   } while (false)
 
-#define FAIL(...)                                                           \
+#define CAF_FAIL(...)                                                       \
   do {                                                                      \
     (void)(::unit::detail::expr{this, __FILE__, __LINE__, true,             \
                                 #__VA_ARGS__} ->* __VA_ARGS__);             \
@@ -376,12 +376,12 @@ private:
     ::unit::engine::last_check_line(__LINE__);                              \
   } while (false)
 
-#define REQUIRE(...)                                                        \
+#define CAF_SATISFY(...)                                                    \
   do {                                                                      \
-    auto UNIT_UNIQUE(__result) =                                            \
+    auto CAF_UNIQUE(__result) =                                             \
     ::unit::detail::expr{this, __FILE__, __LINE__, false, #__VA_ARGS__}     \
          ->* __VA_ARGS__;                                                   \
-    if (! UNIT_UNIQUE(__result)) {                                          \
+    if (! CAF_UNIQUE(__result)) {                                           \
       throw ::unit::require_error{#__VA_ARGS__};                            \
     }                                                                       \
     ::unit::engine::last_check_file(__FILE__);                              \
@@ -389,17 +389,17 @@ private:
   } while (false)
 
 
-#define SUITE(name)                                                         \
-  namespace { ::unit::detail::namer UNIT_UNIQUE(namer){name}; }
+#define CAF_SUITE(name)                                                     \
+  namespace { ::unit::detail::namer CAF_UNIQUE(namer){name}; }
 
-#define TEST(name)                                                          \
+#define CAF_TEST(name)                                                      \
   namespace {                                                               \
-  struct UNIT_UNIQUE(test) : public ::unit::test {                          \
-    UNIT_UNIQUE(test)() : test{name} { }                                    \
+  struct CAF_UNIQUE(test) : public ::unit::test {                           \
+    CAF_UNIQUE(test)() : test{name} { }                                     \
     void __run() final;                                                     \
   };                                                                        \
-  ::unit::detail::adder<UNIT_UNIQUE(test)> UNIT_UNIQUE(a){};                \
+  ::unit::detail::adder<CAF_UNIQUE(test)> CAF_UNIQUE(a){};                  \
   } /* namespace <anonymous> */                                             \
-  void UNIT_UNIQUE(test)::__run()
+  void CAF_UNIQUE(test)::__run()
 
 #endif

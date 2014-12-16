@@ -1,16 +1,16 @@
 #include "framework/unit.hpp"
 
-SUITE("example")
+CAF_SUITE("example")
 
-TEST("foo")
+CAF_TEST("foo")
 {
-  CHECK(true);
-  CHECK(false);
+  CAF_CHECK(true);
+  CAF_CHECK(false);
 }
 
-TEST("bar")
+CAF_TEST("bar")
 {
   auto i = 42;
   i *= 2;
-  REQUIRE(i == 84);
+  CAF_SATISFY(i == 84);
 }

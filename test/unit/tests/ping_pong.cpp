@@ -18,13 +18,13 @@ size_t s_pongs = 0;
 behavior ping_behavior(local_actor* self, size_t num_pings) {
   return (on(atom("pong"), arg_match) >> [=](int value)->message {
         if (!self->last_sender()) {
-          ERROR("last_sender() invalid!");
+          CAF_TEST_ERROR("last_sender() invalid!");
         }
-        INFO("received {'pong', " << value << "}");
+        CAF_TEST_INFO("received {'pong', " << value << "}");
         // cout << to_string(self->last_dequeued()) << endl;
         if (++s_pongs >= num_pings) {
-          INFO("reached maximum, send {'EXIT', user_defined} "
-               << "to last sender and quit with normal reason");
+          CAF_TEST_INFO("reached maximum, send {'EXIT', user_defined} "
+                        << "to last sender and quit with normal reason");
           self->send_exit(self->last_sender(),
                   exit_reason::user_shutdown);
           self->quit();
@@ -40,7 +40,7 @@ behavior ping_behavior(local_actor* self, size_t num_pings) {
 
 behavior pong_behavior(local_actor* self) {
   return (on(atom("ping"), arg_match) >> [](int value)->message {
-        INFO("received {'ping', " << value << "}");
+        CAF_TEST_INFO("received {'ping', " << value << "}");
         return make_message(atom("pong"), value + 1);
       },
       others() >> [=] {
@@ -74,15 +74,15 @@ void pong(blocking_actor* self, actor ping_actor) {
 
 void event_based_pong(event_based_actor* self, actor ping_actor) {
   CAF_LOGF_TRACE("ping_actor = " << to_string(ping_actor));
-  // FIXME: REQUIRE() can only be called inside TEST().
-  //REQUIRE(ping_actor != invalid_actor);
+  // FIXME: CAF_SATISFY() can only be called inside CAF_TEST().
+  //CAF_SATISFY(ping_actor != invalid_actor);
   self->send(ping_actor, atom("pong"), 0); // kickoff
   self->become(pong_behavior(self));
 }
 
-SUITE("spawn")
+CAF_SUITE("spawn")
 
-TEST("ping-pong") {
+CAF_TEST("ping-pong") {
   using namespace caf;
   scoped_actor self;
   self->trap_exit(true);
@@ -95,22 +95,22 @@ TEST("ping-pong") {
   // wait for DOWN and EXIT messages of pong
   self->receive_for(i, 4) (
     [&](const exit_msg& em) {
-      CHECK(em.source == pong_actor);
-      CHECK(em.reason == exit_reason::user_shutdown);
+      CAF_CHECK(em.source == pong_actor);
+      CAF_CHECK(em.reason == exit_reason::user_shutdown);
       flags |= 0x01;
     },
     [&](const down_msg& dm) {
       if (dm.source == pong_actor) {
         flags |= 0x02;
-        CHECK(dm.reason == exit_reason::user_shutdown);
+        CAF_CHECK(dm.reason == exit_reason::user_shutdown);
       }
       else if (dm.source == ping_actor) {
         flags |= 0x04;
-        CHECK(dm.reason == exit_reason::normal);
+        CAF_CHECK(dm.reason == exit_reason::normal);
       }
     },
     [&](const atom_value& val) {
-      CHECK(val == atom("FooBar"));
+      CAF_CHECK(val == atom("FooBar"));
       flags |= 0x08;
     },
     others() >> [&]() {
@@ -124,6 +124,6 @@ TEST("ping-pong") {
   );
   // wait for termination of all spawned actors
   self->await_all_other_actors_done();
-  CHECK(flags == 0x0F);
-  CHECK(pongs() == 10);
+  CAF_CHECK(flags == 0x0F);
+  CAF_CHECK(pongs() == 10);
 }
