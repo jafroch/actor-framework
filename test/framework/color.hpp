@@ -4,23 +4,23 @@
 namespace unit {
 namespace color {
 
-extern char const* reset;
-extern char const* black;
-extern char const* red;
-extern char const* green;
-extern char const* yellow;
-extern char const* blue;
-extern char const* magenta;
-extern char const* cyan;
-extern char const* white;
-extern char const* bold_black;
-extern char const* bold_red;
-extern char const* bold_green;
-extern char const* bold_yellow;
-extern char const* bold_blue;
-extern char const* bold_magenta;
-extern char const* bold_cyan;
-extern char const* bold_white;
+extern const char* reset;
+extern const char* black;
+extern const char* red;
+extern const char* green;
+extern const char* yellow;
+extern const char* blue;
+extern const char* magenta;
+extern const char* cyan;
+extern const char* white;
+extern const char* bold_black;
+extern const char* bold_red;
+extern const char* bold_green;
+extern const char* bold_yellow;
+extern const char* bold_blue;
+extern const char* bold_magenta;
+extern const char* bold_cyan;
+extern const char* bold_white;
 
 } // namespace color
 } // namespace unit

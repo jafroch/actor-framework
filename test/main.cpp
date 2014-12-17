@@ -6,8 +6,8 @@
 
 int main(int argc, char* argv[]) {
   using namespace caf;
-
-  bool colorize = true;
+  // Default values.
+  auto colorize = true;
   std::string log_file;
   int verbosity_console = 3;
   int verbosity_file = 3;
@@ -16,33 +16,33 @@ int main(int argc, char* argv[]) {
   std::regex not_suites;
   std::regex tests{".*"};
   std::regex not_tests;
-
+  // Our simple command line parser.
   message_handler parser = (
     on("-n") >> [&] {
       colorize = false;
     },
-    on("-l", arg_match) >> [&](std::string const& file_name) {
+    on("-l", arg_match) >> [&](const std::string& file_name) {
       log_file = file_name;
     },
-    on("-v", arg_match) >> [&](std::string const& n) {
+    on("-v", arg_match) >> [&](const std::string& n) {
       verbosity_console = std::strtol(n.c_str(), nullptr, 10);
     },
-    on("-V", arg_match) >> [&](std::string const& n) {
+    on("-V", arg_match) >> [&](const std::string& n) {
       verbosity_file = std::strtol(n.c_str(), nullptr, 10);
     },
-    on("-r", arg_match) >> [&](std::string const& n) {
+    on("-r", arg_match) >> [&](const std::string& n) {
       max_runtime = std::strtol(n.c_str(), nullptr, 10);
     },
-    on("-s", arg_match) >> [&](std::string const& str) {
+    on("-s", arg_match) >> [&](const std::string& str) {
       suites = str;
     },
-    on("-S", arg_match) >> [&](std::string const& str) {
+    on("-S", arg_match) >> [&](const std::string& str) {
       not_suites = str;
     },
-    on("-t", arg_match) >> [&](std::string const& str) {
+    on("-t", arg_match) >> [&](const std::string& str) {
       tests = str;
     },
-    on("-T", arg_match) >> [&](std::string const& str) {
+    on("-T", arg_match) >> [&](const std::string& str) {
       not_tests = str;
     },
     others() >> [&] {

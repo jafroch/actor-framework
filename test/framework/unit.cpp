@@ -41,11 +41,11 @@ void test::__fail(std::string msg, bool expected) {
     ++expected_failures_;
 }
 
-std::vector<std::pair<bool, std::string>> const& test::__trace() const {
+const std::vector<std::pair<bool, std::string>>& test::__trace() const {
   return trace_;
 }
 
-std::string const& test::__name() const {
+const std::string& test::__name() const {
   return name_;
 }
 
@@ -93,14 +93,14 @@ void engine::last_check_line(size_t line) {
 }
 
 bool engine::run(bool colorize,
-                 std::string const& log_file,
+                 const std::string& log_file,
                  int verbosity_console,
                  int verbosity_file,
                  int max_runtime,
-                 std::regex const& suites,
-                 std::regex const& not_suites,
-                 std::regex const& tests,
-                 std::regex const& not_tests) {
+                 const std::regex& suites,
+                 const std::regex& not_suites,
+                 const std::regex& tests,
+                 const std::regex& not_tests) {
   if (! colorize) {
     color::reset        = "";
     color::black        = "";
@@ -166,7 +166,7 @@ bool engine::run(bool colorize,
           ::abort();
         }}.detach();
         t->__run();
-      } catch (require_error const& e) {
+      } catch (const require_error& e) {
         failed_require = true;
       }
       auto stop = std::chrono::steady_clock::now();
@@ -259,7 +259,7 @@ logger::message::message(logger& l, level lvl)
     level_{lvl} {
 }
 
-bool logger::init(int lvl_cons, int lvl_file, std::string const& logfile) {
+bool logger::init(int lvl_cons, int lvl_file, const std::string& logfile) {
   instance().level_console_ = static_cast<level>(lvl_cons);
   instance().level_file_ = static_cast<level>(lvl_file);
   if (! logfile.empty()) {

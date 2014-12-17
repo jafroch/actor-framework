@@ -27,8 +27,8 @@ class test {
   void __pass(std::string msg);
   void __fail(std::string msg, bool expected);
   size_t __expected_failures() const;
-  std::vector<std::pair<bool, std::string>> const& __trace() const;
-  std::string const& __name() const;
+  const std::vector<std::pair<bool, std::string>>& __trace() const;
+  const std::string& __name() const;
 
  private:
   size_t expected_failures_ = 0;
@@ -58,14 +58,14 @@ class engine {
   /// @param not_suites Whether to colorize the output.
   /// @returns `true` iff all tests succeeded.
   static bool run(bool colorize,
-                  std::string const& log_file,
+                  const std::string& log_file,
                   int verbosity_console,
                   int verbosity_file,
                   int max_runtime,
-                  std::regex const& suites,
-                  std::regex const& not_suites,
-                  std::regex const& tests,
-                  std::regex const& not_tests);
+                  const std::regex& suites,
+                  const std::regex& not_suites,
+                  const std::regex& tests,
+                  const std::regex& not_tests);
 
   /// Retrieves the file of the last check.
   /// @returns The source file where the last successful check came from.
@@ -104,7 +104,7 @@ class logger {
     message(logger& l, level lvl);
 
     template <typename T>
-    message& operator<<(T const& x) {
+    message& operator<<(const T& x) {
       logger_.log(level_, x);
       return *this;
     }
@@ -114,12 +114,12 @@ class logger {
     level level_;
   };
 
-  static bool init(int lvl_cons, int lvl_file, std::string const& logfile);
+  static bool init(int lvl_cons, int lvl_file, const std::string& logfile);
 
   static logger& instance();
 
   template <typename T>
-  void log(level lvl, T const& x) {
+  void log(level lvl, const T& x) {
     if (lvl <= level_console_)
       console_ << x;
     if (lvl <= level_file_)
@@ -165,7 +165,7 @@ template <typename T>
 struct showable_base {};
 
 template <typename T>
-std::ostream& operator<<(std::ostream& out, showable_base<T> const&) {
+std::ostream& operator<<(std::ostream& out, const showable_base<T>&) {
   out << color::blue << "<unprintable>" << color::reset;
   return out;
 }
@@ -173,16 +173,16 @@ std::ostream& operator<<(std::ostream& out, showable_base<T> const&) {
 template <typename T>
 class showable : public showable_base<T> {
  public:
-  explicit showable(T const& x) : x_(x) { }
+  explicit showable(const T& x) : x_(x) { }
 
   template <typename U = T>
-  friend auto operator<<(std::ostream& out, showable const& p)
-    -> decltype(out << std::declval<U const&>()) {
+  friend auto operator<<(std::ostream& out, const showable& p)
+    -> decltype(out << std::declval<const U&>()) {
     return out << p.x_;
   }
 
  private:
-  T const& x_;
+  const T& x_;
 };
 
 template <typename T>
@@ -207,7 +207,7 @@ template <typename T>
 struct lhs {
  public:
   lhs(test* parent, char const *file, int line, char const *expr,
-      bool should_fail, T const& x)
+      bool should_fail, const T& x)
     : test_(parent),
       filename_(file),
       line_(line),
@@ -237,37 +237,37 @@ struct lhs {
   }
 
   template <typename U>
-  bool operator==(U const& u) {
+  bool operator==(const U& u) {
     evaluated_ = true;
     return x_ == static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
 
   template <typename U>
-  bool operator!=(U const& u) {
+  bool operator!=(const U& u) {
     evaluated_ = true;
     return x_ != static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
 
   template <typename U>
-  bool operator<(U const& u) {
+  bool operator<(const U& u) {
     evaluated_ = true;
     return x_ < static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
 
   template <typename U>
-  bool operator<=(U const& u) {
+  bool operator<=(const U& u) {
     evaluated_ = true;
     return x_ <= static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
 
   template <typename U>
-  bool operator>(U const& u) {
+  bool operator>(const U& u) {
     evaluated_ = true;
     return x_ > static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
 
   template <typename U>
-  bool operator>=(U const& u) {
+  bool operator>=(const U& u) {
     evaluated_ = true;
     return x_ >= static_cast<elevated<U>>(u) ? pass() : fail(u);
   }
@@ -304,7 +304,7 @@ struct lhs {
   }
 
   template <typename U>
-  bool fail(U const& u) {
+  bool fail(const U& u) {
     std::stringstream ss;
     ss
       << color::red << "!! "
@@ -324,7 +324,7 @@ struct lhs {
   int line_;
   char const *expr_;
   bool should_fail_;
-  T const& x_;
+  const T& x_;
 };
 
 struct expr {
@@ -339,7 +339,7 @@ struct expr {
   }
 
   template <typename T>
-  lhs<T> operator->*(T const& x) {
+  lhs<T> operator->*(const T& x) {
     return {test_, filename_, line_, expr_, should_fail_, x};
   }
 
