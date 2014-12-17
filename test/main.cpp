@@ -50,7 +50,22 @@ int main(int argc, char* argv[]) {
       std::exit(1);
     }
   );
-  auto flags = "nlvVrsStT";
+  auto is_opt_char = [](char c) {
+    switch (c) {
+      default:
+        return false;
+      case 'n':
+      case 'l':
+      case 'v':
+      case 'V':
+      case 'r':
+      case 's':
+      case 'S':
+      case 't':
+      case 'T':
+        return true;
+    };
+  };
   for (int i = 1; i < argc; ++i) {
     message_builder builder;
     std::string arg{argv[i]};
@@ -60,9 +75,9 @@ int main(int argc, char* argv[]) {
     }
     builder.append(std::move(arg));
     if (i + 1 < argc) {
-      std::string next{argv[i + 1]};
-      if (next.empty() || next[0] != '-' || next.find_first_of(flags) != 1) {
-        builder.append(std::move(next));
+      auto next = argv[i + 1];
+      if (*next == '\0' || next[0] != '-' || ! is_opt_char(next[1])) {
+        builder.append(std::string{next});
         ++i;
       }
     }
