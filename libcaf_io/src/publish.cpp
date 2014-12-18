@@ -32,25 +32,25 @@
 namespace caf {
 namespace io {
 
-void publish_impl(abstract_actor_ptr whom, uint16_t port,
-                  const char* in, bool reuse_addr) {
+uint16_t publish_impl(abstract_actor_ptr whom, uint16_t port,
+                      const char* in, bool reuse_addr) {
   using namespace detail;
   auto mm = middleman::instance();
-  std::promise<bool> res;
+  std::promise<uint16_t> res;
   mm->run_later([&] {
     auto bro = mm->get_named_broker<basp_broker>(atom("_BASP"));
     try {
       auto hdl = mm->backend().add_tcp_doorman(bro.get(), port, in, reuse_addr);
-      bro->add_published_actor(hdl, whom, port);
-      mm->notify<hook::actor_published>(whom->address(), port);
-      res.set_value(true);
+      bro->add_published_actor(std::move(hdl.first), whom, port);
+      mm->notify<hook::actor_published>(whom->address(), hdl.second);
+      res.set_value(hdl.second);
     }
     catch (...) {
       res.set_exception(std::current_exception());
     }
   });
   // block caller and re-throw exception here in case of an error
-  res.get_future().get();
+  return res.get_future().get();
 }
 
 } // namespace io

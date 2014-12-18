@@ -346,16 +346,16 @@ void test_remote_actor(const char* app_path, bool run_remote_actor) {
   scoped_actor self;
   auto serv = self->spawn<server, monitored>();
   auto publish_serv = [=](uint16_t p) {
-    io::publish(serv, p, "127.0.0.1");
+    return io::publish(serv, p, "127.0.0.1");
   };
   auto publish_groups = [](uint16_t p) {
-    io::publish_local_groups(p);
+    return io::publish_local_groups(p);
   };
   // publish on two distinct ports and use the latter one afterwards
-  auto port0 = at_some_port(4242, publish_serv);
-  CAF_LOGF_INFO("first publish succeeded on port " << port0);
-  auto port = at_some_port(port0 + 1, publish_serv);
-  CAF_PRINT("running on port " << port);
+  auto random_port = publish_serv(0);
+  CAF_PRINT("random publish succeeded on port " << random_port);
+  auto port = at_some_port(4242, publish_serv);
+  CAF_PRINT("first manual publish succeeded on port " << port);
   CAF_LOGF_INFO("running on port " << port);
   // publish local groups as well
   auto gport = at_some_port(port + 1, publish_groups);
@@ -366,10 +366,10 @@ void test_remote_actor(const char* app_path, bool run_remote_actor) {
   CAF_CHECK(serv == serv2);
   thread child;
   if (run_remote_actor) {
-    child = run_program(app_path, "-c", port, port0, gport);
+    child = run_program(app_path, "-c", port, random_port, gport);
   } else {
     CAF_PRINT("please run client with: "
-              << "-c " << port << " " << port0 << " " << gport);
+              << "-c " << port << " " << random_port << " " << gport);
   }
   CAF_CHECKPOINT();
   self->receive(
