@@ -43,7 +43,7 @@ uint16_t publish_impl(abstract_actor_ptr whom, uint16_t port,
     auto bro = mm->get_named_broker<basp_broker>(atom("_BASP"));
     try {
       auto hdl = mm->backend().add_tcp_doorman(bro.get(), port, in, reuse_addr);
-      bro->add_published_actor(std::move(hdl.first), whom, port);
+      bro->add_published_actor(std::move(hdl.first), whom, hdl.second);
       mm->notify<hook::actor_published>(whom->address(), hdl.second);
       anon_send(selfhdl, atom("OK"), hdl.second);
     }
