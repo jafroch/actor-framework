@@ -330,22 +330,16 @@ class server : public event_based_actor {
 void test_remote_actor(const char* app_path, bool run_remote_actor) {
   scoped_actor self;
   auto serv = self->spawn<server, monitored>();
-  auto publish_serv = [=](uint16_t p) {
-    return io::publish(serv, p, "127.0.0.1");
-  };
-  auto publish_groups = [](uint16_t p) {
-    return io::publish_local_groups(p);
-  };
   // publish on two distinct ports and use the latter one afterwards
-  auto port1 = publish_serv(0);
+  auto port1 = io::publish(serv, 0, "127.0.0.1");
   CAF_CHECK(port1 > 0);
   CAF_PRINT("first publish succeeded on port " << port1);
-  auto port2 = publish_serv(0);
+  auto port2 = io::publish(serv, 0, "127.0.0.1");
   CAF_CHECK(port2 > 0);
   CAF_PRINT("second publish succeeded on port " << port1);
   CAF_LOGF_INFO("running on port " << port2);
   // publish local groups as well
-  auto gport = publish_groups(0);
+  auto gport = io::publish_local_groups(0);
   CAF_CHECK(gport > 0);
   // check whether accessing local actors via io::remote_actors works correctly,
   // i.e., does not return a proxy instance
