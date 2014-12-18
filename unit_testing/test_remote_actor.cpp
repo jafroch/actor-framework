@@ -327,21 +327,6 @@ class server : public event_based_actor {
 
 };
 
-template <class F>
-uint16_t at_some_port(uint16_t first_port, F fun) {
-  auto port = first_port;
-  for (;;) {
-    try {
-      fun(port);
-      return port;
-    }
-    catch (bind_failure&) {
-      // try next port
-      ++port;
-    }
-  }
-}
-
 void test_remote_actor(const char* app_path, bool run_remote_actor) {
   scoped_actor self;
   auto serv = self->spawn<server, monitored>();
@@ -352,24 +337,27 @@ void test_remote_actor(const char* app_path, bool run_remote_actor) {
     return io::publish_local_groups(p);
   };
   // publish on two distinct ports and use the latter one afterwards
-  auto random_port = publish_serv(0);
-  CAF_PRINT("random publish succeeded on port " << random_port);
-  auto port = at_some_port(4242, publish_serv);
-  CAF_PRINT("first manual publish succeeded on port " << port);
-  CAF_LOGF_INFO("running on port " << port);
+  auto port1 = publish_serv(0);
+  CAF_CHECK(port1 > 0);
+  CAF_PRINT("first publish succeeded on port " << port1);
+  auto port2 = publish_serv(0);
+  CAF_CHECK(port2 > 0);
+  CAF_PRINT("second publish succeeded on port " << port1);
+  CAF_LOGF_INFO("running on port " << port2);
   // publish local groups as well
-  auto gport = at_some_port(port + 1, publish_groups);
+  auto gport = publish_groups(0);
+  CAF_CHECK(gport > 0);
   // check whether accessing local actors via io::remote_actors works correctly,
   // i.e., does not return a proxy instance
-  auto serv2 = io::remote_actor("127.0.0.1", port);
+  auto serv2 = io::remote_actor("127.0.0.1", port2);
   CAF_CHECK(serv2 != invalid_actor && !serv2->is_remote());
   CAF_CHECK(serv == serv2);
   thread child;
   if (run_remote_actor) {
-    child = run_program(app_path, "-c", port, random_port, gport);
+    child = run_program(app_path, "-c", port2, port1, gport);
   } else {
     CAF_PRINT("please run client with: "
-              << "-c " << port << " " << random_port << " " << gport);
+              << "-c " << port2 << " " << port1 << " " << gport);
   }
   CAF_CHECKPOINT();
   self->receive(
