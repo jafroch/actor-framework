@@ -785,7 +785,9 @@ uint16_t ipv4_bind(SocketAcceptor& sock,
          uint16_t port,
          const char* addr = nullptr) {
   CAF_LOGF_TRACE(CAF_ARG(port));
-  sock = new_ipv4_acceptor(port, addr).second;
+  auto acceptor = new_ipv4_acceptor(port, addr);
+  sock = std::move(acceptor.first);
+  return acceptor.second;
 }
 
 } // namespace network
